@@ -44,12 +44,23 @@ body{
   min-height:100%;overflow-x:hidden;user-select:none;
 }
 .app{width:100%;max-width:460px;padding:14px 14px 28px;display:flex;flex-direction:column;gap:12px}
-header{display:flex;align-items:center;gap:10px}
-.title{font-weight:700;font-size:22px;line-height:1;display:flex;flex-direction:column}
-.title small{font-weight:500;font-size:11px;opacity:.6;letter-spacing:2px;margin-top:3px}
+/* ヘッダーは2段構成：1段目=タイトル＋音/やり直し、2段目=レベル・難易度・ライフ */
+header{display:flex;flex-direction:column;gap:8px}
+.topbar,.subbar{display:flex;align-items:center;gap:8px;min-width:0}
+.title{font-weight:700;font-size:clamp(18px,5.4vw,22px);line-height:1.15;display:flex;flex-direction:column;white-space:nowrap}
+.title small{font-weight:500;font-size:11px;opacity:.6;letter-spacing:2px;margin-top:3px;white-space:nowrap}
 .spacer{flex:1}
-.lvl-badge{background:#1f2a33;border:1px solid #56697a;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer}
-.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid #56697a;background:#1f2a33;color:var(--ink);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .08s}
+.lvl-badge{background:#1f2a33;border:1px solid #56697a;border-radius:999px;padding:6px 12px;font-size:clamp(11px,3.2vw,13px);font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto;cursor:pointer}
+/* 難易度ボタン。ラベルが長くても絶対に折り返さない */
+.pill{flex:0 0 auto;height:32px;padding:0 12px;border-radius:999px;border:1px solid #56697a;background:#1f2a33;color:var(--ink);font-family:inherit;font-size:clamp(11px,3.2vw,13px);font-weight:700;line-height:1;white-space:nowrap;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .08s}
+.pill:active{transform:scale(.94)}
+/* ライフ表示 */
+.lives{flex:0 0 auto;display:flex;gap:3px;font-size:15px;line-height:1}
+.lives span{color:#ff6b81;text-shadow:0 1px 2px rgba(0,0,0,.4);transition:opacity .2s,transform .2s}
+.lives span.lost{color:#6b7883;opacity:.45;transform:scale(.82)}
+.lives.hit{animation:lifeHit .4s}
+@keyframes lifeHit{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px) scale(1.12)}65%{transform:translateX(4px)}}
+.iconbtn{width:40px;height:40px;flex:0 0 auto;border-radius:12px;border:1px solid #56697a;background:#1f2a33;color:var(--ink);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .08s}
 .iconbtn:active{transform:scale(.9)}
 .board-wrap{position:relative;border:1px solid #56697a;border-radius:22px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);background:linear-gradient(180deg,#9fb4cd 0%,#7d92ab 55%,#5d7188 100%)}
 .board-wrap.shake{animation:shake .3s}
@@ -95,18 +106,24 @@ header{display:flex;align-items:center;gap:10px}
 <body>
 <div class="app">
   <header>
-    <div class="title">ネジ抜き 3D<small>UNSCREW</small></div>
-    <div class="spacer"></div>
-    <div class="lvl-badge" id="lvlBadge">レベル 1</div>
-    <button class="iconbtn" id="diffBtn" style="width:auto;padding:0 12px;font-size:13px;font-weight:700">ふつう</button>
-    <button class="iconbtn" id="soundBtn">🔊</button>
-    <button class="iconbtn" id="restartBtn">↻</button>
+    <div class="topbar">
+      <div class="title">ネジ抜き 3D<small>UNSCREW</small></div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="soundBtn">🔊</button>
+      <button class="iconbtn" id="restartBtn">↻</button>
+    </div>
+    <div class="subbar">
+      <div class="lvl-badge" id="lvlBadge">レベル 1</div>
+      <button class="pill" id="diffBtn">ふつう</button>
+      <div class="spacer"></div>
+      <div class="lives" id="lives" title="ミスできる回数"></div>
+    </div>
   </header>
 
   <div class="board-wrap" id="boardWrap">
     <canvas id="cv"></canvas>
     <div class="toast" id="toast"></div>
-    <div class="hint">ドラッグで上下左右に回転 ・ 家の底にもネジがあるよ</div>
+    <div class="hint">ドラッグで回転 ・ 外せないネジを押すと ♥ が減るよ</div>
   </div>
 
   <div>
@@ -3593,12 +3610,14 @@ function resize(){
 let levelIdx=0, planks=[], screws=[], plankDropped=new Set();
 let trayQueue=[], qPos=0, trays=[], busy=false, soundOn=true;
 const DIFFS=[
-  {label:'やさしい', trays:3, scatter:false},
-  {label:'ふつう',   trays:3, scatter:true},
-  {label:'むずかしい',trays:2, scatter:true},
-  {label:'エキスパート',trays:1, scatter:true}, // トレイ1枚＝外す順をほぼ強制。解ける保証は維持
+  // lives = ミスできる回数。0 になるとゲームオーバー（＝適当に押し続けてもクリアできない）
+  {label:'やさしい', trays:3, scatter:false, lives:5},
+  {label:'ふつう',   trays:3, scatter:true,  lives:4},
+  {label:'むずかしい',trays:2, scatter:true,  lives:3},
+  {label:'エキスパート',trays:1, scatter:true,  lives:2}, // トレイ1枚＝外す順をほぼ強制。解ける保証は維持
 ];
 let diffIdx=1;
+let lives=0, maxLives=0;
 const screwHeads=[];
 
 /* ---------- kit（design_handoff 由来のモデルライブラリ）----------
@@ -3733,6 +3752,7 @@ function buildBoxParts(lv){
       screwSlots.push({id:def.id+'_'+i,plankId:def.id,blockers:s.blockedBy?[s.blockedBy]:[],lp:s.lp,ln:s.ln,node:mesh});
     });
   });
+  houseGroup.updateMatrixWorld(true); // densifyScrews がレイを撃つので行列を確定させる
   return screwSlots;
 }
 
@@ -3771,8 +3791,100 @@ function buildKitParts(lv){
     });
   });
   houseGroup.updateMatrixWorld(true);
-  deriveBlockers(screwSlots);
+  // deriveBlockers は densifyScrews で増設したネジも対象にしたいので buildLevel 側で呼ぶ
   return screwSlots;
+}
+
+/* ---------- ネジ増設（densify） ----------
+   モデル定義には手を入れず、ネジ本数を最大2倍にする。
+   既存ネジ1本につき「面に沿ってずらした候補点」を探し、
+   同じパーツの同じ面がそこにも在ることをレイで確認できた点だけ採用する。
+   → 宙に浮いたネジや、他パーツに隠れた場所には置かれない。
+   ※ ネジのメッシュを生成する前に呼ぶこと（当たり判定球がレイを遮るため） */
+const DENSIFY_MIN_DIST=0.58; // ネジ同士の最小間隔（ワールド距離）
+const DENSIFY_TOL=0.7;       // 元ネジの面からどれだけ手前／奥までを同じ面とみなすか
+const DENSIFY_FACE_DOT=0.55; // 面の傾き許容（1=正対）。浅い角度に刺さるのを防ぐ
+function densifyScrews(slots){
+  houseGroup.updateMatrixWorld(true);
+  const rc=new THREE.Raycaster();
+  const q=new THREE.Quaternion(), nm=new THREE.Matrix3();
+  // 面を測る。最初に当たったのが期待パーツでなければ null（＝遮蔽 or 面が無い）
+  // 戻り値: {dist, point, normal} normal は外向きのワールド法線（曲面にも沿わせられる）
+  rc.far=REACH+DENSIFY_TOL+0.2; // 面より奥は見る必要がないので打ち切る（大きなモデルでの負荷対策）
+  const probe=(node,lp,n,plankId)=>{
+    const p=new THREE.Vector3(lp[0],lp[1],lp[2]); node.localToWorld(p);
+    rc.set(p.clone().addScaledVector(n,REACH), n.clone().negate());
+    for(const h of rc.intersectObject(houseGroup,true)){
+      let o=h.object, owner=null;
+      while(o){ if(o.userData.plankId){owner=o.userData.plankId;break;} o=o.parent; }
+      if(!owner) continue;
+      if(owner!==plankId) return null;
+      let nw=n.clone();
+      if(h.face){
+        nw=h.face.normal.clone().applyMatrix3(nm.getNormalMatrix(h.object.matrixWorld)).normalize();
+        if(nw.dot(n)<0) nw.negate(); // 裏向きの面は反転して外向きに揃える
+      }
+      return {dist:h.distance,point:h.point.clone(),normal:nw};
+    }
+    return null;
+  };
+  const worldOf=s=>{ const v=new THREE.Vector3(s.lp[0],s.lp[1],s.lp[2]); s.node.localToWorld(v); return v; };
+  const byPlank=new Map();
+  slots.forEach(s=>{ if(!byPlank.has(s.plankId)) byPlank.set(s.plankId,[]); byPlank.get(s.plankId).push(s); });
+  const extra=[];
+  const DISTS=[0.8,1.15,0.68,1.55,2.0]; // 面に沿ってずらす距離の候補（近い順に試す）
+  byPlank.forEach((list,plankId)=>{
+    const occupied=list.map(worldOf); // 既存＋採用済みのネジ位置（ワールド）
+    const cap=list.length;            // 増設はパーツごと元の本数まで（＝最大2倍）
+    let seq=0;
+    // 元ネジ1本につき最大2回（2周）試す。1周目で埋まらなかった隙間を2周目で拾う
+    for(let round=0;round<2 && seq<cap;round++){
+      for(const base of list){
+        if(seq>=cap) break;
+        const node=base.node;
+        node.getWorldQuaternion(q);
+        const nLocal=new THREE.Vector3(base.ln[0],base.ln[1],base.ln[2]).normalize();
+        const n=nLocal.clone().applyQuaternion(q).normalize();
+        const ref=probe(node,base.lp,n,plankId);
+        if(!ref) continue; // 元ネジ自体が遮蔽されている面（blockedBy 前提の面）は増設しない
+        // 面内の直交2軸をつくる
+        const t=Math.abs(nLocal.x)>0.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+        const u=new THREE.Vector3().crossVectors(nLocal,t).normalize();
+        const w=new THREE.Vector3().crossVectors(nLocal,u).normalize();
+        const a0=Math.random()*Math.PI*2; // 開始角をずらして毎回同じ並びにならないようにする
+        let placed=false;
+        for(const d of DISTS){
+          for(let k=0;k<8;k++){
+            const a=a0+k*Math.PI/4, cs=Math.cos(a)*d, sn=Math.sin(a)*d;
+            const aim=[base.lp[0]+u.x*cs+w.x*sn, base.lp[1]+u.y*cs+w.y*sn, base.lp[2]+u.z*cs+w.z*sn];
+            const p=new THREE.Vector3(aim[0],aim[1],aim[2]); node.localToWorld(p);
+            if(occupied.some(o=>o.distanceTo(p)<DENSIFY_MIN_DIST)) continue;
+            const hit=probe(node,aim,n,plankId);
+            if(!hit) continue;                                       // 面が無い／他パーツに遮られる
+            if(Math.abs(hit.dist-ref.dist)>DENSIFY_TOL) continue;    // 段差の上や裏側の面
+            if(hit.normal.dot(n)<DENSIFY_FACE_DOT) continue;         // 浅い角度の面には刺さない
+            // 実際に当たった面へ吸着させる（曲面でも面に沿ってネジ頭が座る）。
+            // 面からの浮き量は元ネジと同じにする（box 定義は面のすぐ外、kit は 0.12 めり込み）
+            const seat=hit.point.clone().addScaledVector(hit.normal,ref.dist-REACH);
+            if(occupied.some(o=>o.distanceTo(seat)<DENSIFY_MIN_DIST)) continue;
+            const lpv=node.worldToLocal(seat.clone());
+            const lnv=hit.normal.clone().applyQuaternion(q.clone().invert()).normalize();
+            occupied.push(seat);
+            extra.push({id:plankId+'_x'+(seq++),plankId,blockers:(base.blockers||[]).slice(),
+                        lp:[lpv.x,lpv.y,lpv.z],ln:[lnv.x,lnv.y,lnv.z],node});
+            placed=true; break;
+          }
+          if(placed) break;
+        }
+      }
+    }
+  });
+  // slots とパーツの残りネジ本数に反映する
+  extra.forEach(s=>{
+    slots.push(s);
+    const pk=planks.find(p=>p.id===s.plankId); if(pk) pk.remaining++;
+  });
+  return slots;
 }
 
 function buildLevel(){
@@ -3791,6 +3903,8 @@ function buildLevel(){
 
   // パーツを組み立てる。lv.model があれば kit モデル、無ければ従来の box 定義
   const screwSlots = lv.model ? buildKitParts(lv) : buildBoxParts(lv);
+  densifyScrews(screwSlots);            // ネジを最大2倍に増設（レイ検証つき）
+  if(lv.model) deriveBlockers(screwSlots); // kit モデルは遮蔽を実測（box 定義は blockedBy を使う）
 
   // kit モデルは高さがバラバラなので、実際のバウンディングボックスから注視点と距離を自動計算。
   // box 定義のレベルは従来どおり（lv.model があり camY/camRad 未指定のときだけ上書き）
@@ -3814,6 +3928,7 @@ function buildLevel(){
   // ----- guaranteed-solvable color assignment -----
   // topological order respecting blockedBy, then chunk into CAP groups -> one tray color each
   const diff=DIFFS[diffIdx];
+  maxLives=diff.lives; lives=maxLives; renderLives(); // ライフをレベル開始時にリセット
   const order=topoOrder(screwSlots);
   // CAP個ずつ＋最後は余り、でチャンク化（総数が3の倍数でなくても詰まない）
   const chunkSizes=[];
@@ -3871,6 +3986,7 @@ function buildLevel(){
 const REACH=6; // ネジ頭より外側のこの距離からレイを撃つ
 function deriveBlockers(slots){
   const rc=new THREE.Raycaster();
+  rc.far=REACH; // ネジ位置より奥は遮蔽ではないので探索を打ち切る
   const v=new THREE.Vector3(), n=new THREE.Vector3(), q=new THREE.Quaternion();
   // 「blocker を先に落とす」制約グラフ。追加で循環ができる制約は破棄する
   const before={}; // blocker -> Set(owner)
@@ -4040,12 +4156,31 @@ function tryTap(e){
   if(screwId) tapScrew(screwId);
 }
 
+/* ミス処理：ライフを1つ減らす。0 になったら true（呼び出し側は以降の処理を打ち切る）*/
+function penalty(msg){
+  shake(); sfx('err'); haptic([0,30,40,30]);
+  lives--; renderLives();
+  const el=$('#lives'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
+  if(lives<=0){ busy=true; setTimeout(()=>{busy=false;endGame(false,'life');},260); return true; }
+  toast(msg+'（のこり '+lives+'）');
+  return false;
+}
+function renderLives(){
+  const el=$('#lives'); el.innerHTML='';
+  for(let i=0;i<maxLives;i++){
+    const s=document.createElement('span');
+    s.textContent='♥'; if(i>=lives) s.className='lost';
+    el.appendChild(s);
+  }
+}
+
 function tapScrew(id){
+  if(busy||lives<=0) return; // ゲームオーバー演出中の入力は無視する
   const s=screws.find(x=>x.id===id);
   if(!s||s.taken) return;
-  if(!s.blockers.every(b=>plankDropped.has(b))){ toast('上の部品を先に外そう'); shake(); sfx('err'); haptic([0,30,40,30]); if(!anyMove()) endGame(false); return; }
+  if(!s.blockers.every(b=>plankDropped.has(b))){ if(!penalty('上の部品を先に外そう') && !anyMove()) endGame(false); return; }
   const tray=trays.find(t=>!t.closed && t.color===s.color && t.count<t.need);
-  if(!tray){ toast('その色のトレイがまだ空いてない'); shake(); sfx('err'); haptic([0,30,40,30]); if(!anyMove()) endGame(false); return; }
+  if(!tray){ if(!penalty('その色のトレイがまだ空いてない') && !anyMove()) endGame(false); return; }
 
   s.taken=true; sfx('click'); haptic(10); // ネジ取得成功
   // animate screw out then remove
@@ -4121,14 +4256,19 @@ let toastT=null;
 function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1300); }
 function shake(){ const w=$('#boardWrap'); w.classList.add('shake'); setTimeout(()=>w.classList.remove('shake'),320); }
 
-function endGame(win){
+function endGame(win,reason){
   const ov=$('#overlay'), last=levelIdx===LEVELS.length-1;
+  if(ov.classList.contains('show')) return; // 二重表示を防ぐ
   if(win){
     $('#ovTitle').textContent=last?'全クリア！🎉':'クリア！';
     $('#ovText').textContent =last?'すべての家を解体しました。おつかれさま！':'家を解体できました';
     $('#ovMain').textContent =last?'最初から':'次のレベル ▶';
     $('#ovMain').dataset.act =last?'restart-all':'next';
     confetti();
+  }else if(reason==='life'){
+    $('#ovTitle').textContent='ゲームオーバー';
+    $('#ovText').textContent ='ミスが多すぎました。外せる順番をよく見てもう一度。';
+    $('#ovMain').textContent ='やり直す'; $('#ovMain').dataset.act='retry'; sfx('err');
   }else{
     $('#ovTitle').textContent='行きづまり…';
     $('#ovText').textContent ='置けるトレイがなくなりました。順番を変えてもう一度。';
