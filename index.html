@@ -3646,8 +3646,49 @@ function makeScrew(color){
   // invisible, larger tap target
   const hit=new THREE.Mesh(new THREE.SphereGeometry(0.34,8,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
   hit.position.y=0.18; grp.add(hit);
-  grp.userData.head=head; grp.userData.hit=hit;
+  const lock=makeLockBadge(); grp.add(lock);
+  grp.userData.head=head; grp.userData.hit=hit; grp.userData.lock=lock;
   return grp;
+}
+/* ---------- ロック表示（先に別の部品を外す必要があるネジ）----------
+   南京錠バッジ（本体の箱＋U字のシャックル）。ジオメトリ／マテリアルは全ネジ共有なので
+   dispose されないよう shared 印を付ける。既定は非表示で、refreshLocks が出し入れする。 */
+let lockGeo=null, lockMat=null;
+function makeLockBadge(){
+  if(!lockGeo){
+    const body=new THREE.Mesh(new THREE.BoxGeometry(0.19,0.15,0.10));
+    body.position.y=0.075;
+    const shackle=new THREE.Mesh(new THREE.TorusGeometry(0.062,0.024,5,10,Math.PI));
+    shackle.position.y=0.15;
+    const g=new THREE.Group(); g.add(body); g.add(shackle); g.updateMatrixWorld(true);
+    lockGeo=mergeGeoms([body,shackle],g); lockGeo.userData.shared=true;
+    body.geometry.dispose(); shackle.geometry.dispose();
+    lockMat=new THREE.MeshStandardMaterial({color:0x39414f,roughness:.5,metalness:.35,emissive:0x11151c});
+    lockMat.userData.shared=true;
+  }
+  const m=new THREE.Mesh(lockGeo,lockMat);
+  m.position.y=0.30; m.visible=false; // ネジ頭のすぐ上に載せる
+  return m;
+}
+/* ネジ1本のロック見た目を切り替える。頭は色を保ったまま暗く＋半透明にする（トレイの色は判別できる）*/
+function applyLockVisual(sc,locked){
+  if(sc.locked===locked) return;
+  sc.locked=locked;
+  const m=sc.grp.userData.head.material;
+  if(locked){
+    if(!sc.baseColor) sc.baseColor=m.color.clone();
+    m.color.copy(sc.baseColor).multiplyScalar(0.42);
+    m.transparent=true; m.opacity=0.62;
+  }else{
+    if(sc.baseColor) m.color.copy(sc.baseColor);
+    m.transparent=false; m.opacity=1;
+  }
+  m.needsUpdate=true;
+  if(sc.grp.userData.lock) sc.grp.userData.lock.visible=locked;
+}
+// 盤面全体のロック表示を現在の落下状況に合わせ直す（レベル開始時とパーツ落下時に呼ぶ）
+function refreshLocks(){
+  screws.forEach(s=>{ if(!s.taken) applyLockVisual(s,!s.blockers.every(b=>plankDropped.has(b))); });
 }
 // kit のネジ。螺旋ネジ山（TubeGeometry）などは重いので雛形を1本だけ作って clone で使い回す。
 // clone はジオメトリ・マテリアルを参照共有するので、頭だけネジ色のマテリアルに差し替える。
@@ -3707,6 +3748,7 @@ function makeKitScrew(color){
   head.material=new THREE.MeshStandardMaterial({color:new THREE.Color(color),roughness:.45,metalness:.15});
   grp.userData.head=head;
   grp.userData.hit=grp.children.find(c=>c.name==='screw_hit');
+  const lock=makeLockBadge(); grp.add(lock); grp.userData.lock=lock;
   return grp;
 }
 // gable triangle to fill the gap between roof and wall; child of a wall so it falls with it
@@ -3887,6 +3929,37 @@ function densifyScrews(slots){
   return slots;
 }
 
+/* ---------- 総本数を CAP の倍数に揃える（trim） ----------
+   端数があると最後のトレイだけ2本／1本で終わってしまうので、余りぶんを間引く。
+   増設ネジ（id が _x◯）を優先して削り、足りなければ元のネジからも削る。
+   ただしパーツの残り本数が0になる間引きはしない（そのパーツが落ちなくなり詰むため）。
+   間引けない構成（全パーツ1本ずつ等）はそのまま返す＝従来どおり端数トレイになる。 */
+function trimToMultiple(slots){
+  let over=slots.length%CAP;
+  if(!over) return slots;
+  const count={}; slots.forEach(s=>count[s.plankId]=(count[s.plankId]||0)+1);
+  const drop=new Set();
+  // ネジ本数が多いパーツから削る（少ないパーツを枯らさない）
+  const byRich=arr=>arr.sort((a,b)=>count[b.s.plankId]-count[a.s.plankId]);
+  const pick=list=>{
+    for(const o of list){
+      if(!over) break;
+      if(drop.has(o.i)||count[o.s.plankId]<=1) continue;
+      drop.add(o.i); count[o.s.plankId]--; over--;
+    }
+  };
+  const indexed=slots.map((s,i)=>({s,i}));
+  pick(byRich(indexed.filter(o=>/_x\d+$/.test(o.s.id))));
+  if(over) pick(byRich(indexed.slice()));
+  if(over) return slots; // 削れなかった：従来動作にフォールバック
+  const kept=slots.filter((s,i)=>!drop.has(i));
+  // パーツの残りネジ本数へ反映する
+  const left={}; kept.forEach(s=>left[s.plankId]=(left[s.plankId]||0)+1);
+  planks.forEach(p=>{ if(left[p.id]!==undefined) p.remaining=left[p.id]; });
+  slots.length=0; kept.forEach(s=>slots.push(s));
+  return slots;
+}
+
 function buildLevel(){
   const lv=LEVELS[levelIdx];
   $('#lvlBadge').textContent='レベル '+(levelIdx+1)+' · '+lv.name;
@@ -3904,6 +3977,7 @@ function buildLevel(){
   // パーツを組み立てる。lv.model があれば kit モデル、無ければ従来の box 定義
   const screwSlots = lv.model ? buildKitParts(lv) : buildBoxParts(lv);
   densifyScrews(screwSlots);            // ネジを最大2倍に増設（レイ検証つき）
+  trimToMultiple(screwSlots);           // 総本数を3の倍数に揃える（端数トレイを作らない）
   if(lv.model) deriveBlockers(screwSlots); // kit モデルは遮蔽を実測（box 定義は blockedBy を使う）
 
   // kit モデルは高さがバラバラなので、実際のバウンディングボックスから注視点と距離を自動計算。
@@ -3970,6 +4044,7 @@ function buildLevel(){
     paintTray(t); trays.push(t);
   }
   renderQueue();
+  refreshLocks(); // 最初から外せないネジに錠マークを出す
 }
 
 /* ---------- 遮蔽判定（blockers） ----------
@@ -4178,7 +4253,10 @@ function tapScrew(id){
   if(busy||lives<=0) return; // ゲームオーバー演出中の入力は無視する
   const s=screws.find(x=>x.id===id);
   if(!s||s.taken) return;
-  if(!s.blockers.every(b=>plankDropped.has(b))){ if(!penalty('上の部品を先に外そう') && !anyMove()) endGame(false); return; }
+  if(!s.blockers.every(b=>plankDropped.has(b))){
+    flashBlockers(s.blockers.filter(b=>!plankDropped.has(b))); // 「これを先に外す」部品を光らせる
+    if(!penalty('上の部品を先に外そう') && !anyMove()) endGame(false); return;
+  }
   const tray=trays.find(t=>!t.closed && t.color===s.color && t.count<t.need);
   if(!tray){ if(!penalty('その色のトレイがまだ空いてない') && !anyMove()) endGame(false); return; }
 
@@ -4237,8 +4315,25 @@ function spinOut(grp,done){
     grp.position.y=startY+p*0.4;
   },done);
 }
+/* 「先に外すべき部品」をオレンジに点滅させる。emissive を一時的に上げて元に戻す。
+   emissive を持たないマテリアル（Basic 等）は対象外。 */
+function flashBlockers(ids){
+  ids.forEach(id=>{
+    const pk=planks.find(p=>p.id===id);
+    if(!pk||pk.flashing||plankDropped.has(id)) return;
+    const mats=pk.mats.filter(m=>m.emissive);
+    if(!mats.length) return;
+    pk.flashing=true;
+    const base=mats.map(m=>m.emissive.getHex());
+    tween(880,p=>{
+      const v=Math.max(0,Math.sin(p*Math.PI*3))*(1-p*0.4)*0.6;
+      mats.forEach(m=>m.emissive.setRGB(v,v*0.35,v*0.08));
+    },()=>{ mats.forEach((m,i)=>m.emissive.setHex(base[i])); pk.flashing=false; });
+  });
+}
 function dropPlank(pk){
   sfx('thunk'); plankDropped.add(pk.id);
+  refreshLocks(); // このパーツが外れて解放されたネジの錠を外す
   pk.mats.forEach(m=>{m.transparent=true;});
   const start={x:pk.mesh.position.x,y:pk.mesh.position.y}; const dir=Math.random()<.5?-1:1;
   const rz=pk.mesh.rotation.z;
