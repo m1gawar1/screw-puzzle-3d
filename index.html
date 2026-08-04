@@ -3646,29 +3646,54 @@ function makeScrew(color){
   // invisible, larger tap target
   const hit=new THREE.Mesh(new THREE.SphereGeometry(0.34,8,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
   hit.position.y=0.18; grp.add(hit);
-  const lock=makeLockBadge(); grp.add(lock);
-  grp.userData.head=head; grp.userData.hit=hit; grp.userData.lock=lock;
+  grp.userData.head=head; grp.userData.hit=hit;
+  setShaftInfo(grp,shaft);
   return grp;
 }
-/* ---------- ロック表示（先に別の部品を外す必要があるネジ）----------
-   南京錠バッジ（本体の箱＋U字のシャックル）。ジオメトリ／マテリアルは全ネジ共有なので
-   dispose されないよう shared 印を付ける。既定は非表示で、refreshLocks が出し入れする。 */
-let lockGeo=null, lockMat=null;
-function makeLockBadge(){
-  if(!lockGeo){
-    const body=new THREE.Mesh(new THREE.BoxGeometry(0.19,0.15,0.10));
-    body.position.y=0.075;
-    const shackle=new THREE.Mesh(new THREE.TorusGeometry(0.062,0.024,5,10,Math.PI));
-    shackle.position.y=0.15;
-    const g=new THREE.Group(); g.add(body); g.add(shackle); g.updateMatrixWorld(true);
-    lockGeo=mergeGeoms([body,shackle],g); lockGeo.userData.shared=true;
-    body.geometry.dispose(); shackle.geometry.dispose();
-    lockMat=new THREE.MeshStandardMaterial({color:0x39414f,roughness:.5,metalness:.35,emissive:0x11151c});
-    lockMat.userData.shared=true;
+/* ---------- ネジ軸の長さ合わせ ----------
+   はしごの桟や屋根板のような薄い部品に刺さったネジは、軸が裏へ突き抜けて丸見えになる。
+   そこで「ネジ位置から裏面までの余裕（slot.depth）」を先に測っておき、
+   足りない分だけ軸メッシュを Y 方向に縮める。頭の側は動かさないので見た目は変わらない。
+   軸メッシュはジオメトリ共有なので、縮めるのは clone ごとの scale/position（＝インスタンス単位）で行う。 */
+function setShaftInfo(grp,mesh){
+  mesh.geometry.computeBoundingBox();
+  const b=mesh.geometry.boundingBox, p0=mesh.position.y;
+  // top=軸の上端（頭側・固定する）, reach=原点より下へ伸びている長さ, h=軸の全長
+  grp.userData.shaft={mesh,gmax:b.max.y,p0,top:p0+b.max.y,h:b.max.y-b.min.y,reach:-(p0+b.min.y)};
+}
+function fitShaft(grp,depth){
+  const sh=grp.userData.shaft;
+  if(!sh || !(depth<sh.reach)) return; // 厚みが足りている（または未計測）ならそのまま
+  const want=Math.max(0.02,depth-0.03); // 先端を裏面のわずかに内側で止める
+  const k=Math.max(0.15,(sh.top+want)/sh.h);
+  sh.mesh.scale.y=k;
+  sh.mesh.position.y=sh.p0+sh.gmax*(1-k);
+}
+/* ネジ位置（ワールド）から、そのパーツの裏面までの余裕を測る。
+   裏側からネジへ向けてレイを撃ち、最初に当たった同じパーツの面までが余裕。
+   負の値＝ネジの根元がすでに裏面より外に出ている（薄すぎる部品）。
+   裏面が見つからなければ Infinity（十分な厚みがあるものとして扱う）。
+   ※ ネジのメッシュを生成する前に呼ぶこと（当たり判定球がレイを遮るため）*/
+function backDepth(rc,p,n,plankId){
+  rc.set(p.clone().addScaledVector(n,-REACH), n.clone());
+  for(const h of rc.intersectObject(houseGroup,true)){
+    if(h.distance>REACH+0.5) break; // ネジ頭より手前まで来た＝裏面は見つからなかった
+    let o=h.object, owner=null;
+    while(o){ if(o.userData.plankId){owner=o.userData.plankId;break;} o=o.parent; }
+    if(owner!==plankId) continue;
+    return REACH-h.distance;
   }
-  const m=new THREE.Mesh(lockGeo,lockMat);
-  m.position.y=0.30; m.visible=false; // ネジ頭のすぐ上に載せる
-  return m;
+  return Infinity;
+}
+function measureDepths(slots){
+  const rc=new THREE.Raycaster(); rc.far=REACH*2+1;
+  const q=new THREE.Quaternion(), v=new THREE.Vector3(), n=new THREE.Vector3();
+  slots.forEach(slot=>{
+    slot.node.getWorldQuaternion(q);
+    n.set(slot.ln[0],slot.ln[1],slot.ln[2]).normalize().applyQuaternion(q).normalize();
+    v.set(slot.lp[0],slot.lp[1],slot.lp[2]); slot.node.localToWorld(v);
+    slot.depth=backDepth(rc,v,n,slot.plankId);
+  });
 }
 /* ネジ1本のロック見た目を切り替える。頭は色を保ったまま暗く＋半透明にする（トレイの色は判別できる）*/
 function applyLockVisual(sc,locked){
@@ -3684,7 +3709,6 @@ function applyLockVisual(sc,locked){
     m.transparent=false; m.opacity=1;
   }
   m.needsUpdate=true;
-  if(sc.grp.userData.lock) sc.grp.userData.lock.visible=locked;
 }
 // 盤面全体のロック表示を現在の落下状況に合わせ直す（レベル開始時とパーツ落下時に呼ぶ）
 function refreshLocks(){
@@ -3748,7 +3772,11 @@ function makeKitScrew(color){
   head.material=new THREE.MeshStandardMaterial({color:new THREE.Color(color),roughness:.45,metalness:.15});
   grp.userData.head=head;
   grp.userData.hit=grp.children.find(c=>c.name==='screw_hit');
-  const lock=makeLockBadge(); grp.add(lock); grp.userData.lock=lock;
+  // 軸メッシュ＝頭・当たり判定を除いて一番下まで伸びているもの（薄い部品では fitShaft が縮める）
+  const shaft=grp.children.filter(c=>c.isMesh&&c!==head&&c.name!=='screw_hit')
+    .reduce((a,c)=>{ c.geometry.computeBoundingBox();
+      return (!a||c.position.y+c.geometry.boundingBox.min.y < a.position.y+a.geometry.boundingBox.min.y)?c:a; },null);
+  if(shaft) setShaftInfo(grp,shaft);
   return grp;
 }
 // gable triangle to fill the gap between roof and wall; child of a wall so it falls with it
@@ -3846,9 +3874,11 @@ function buildKitParts(lv){
 const DENSIFY_MIN_DIST=0.58; // ネジ同士の最小間隔（ワールド距離）
 const DENSIFY_TOL=0.7;       // 元ネジの面からどれだけ手前／奥までを同じ面とみなすか
 const DENSIFY_FACE_DOT=0.55; // 面の傾き許容（1=正対）。浅い角度に刺さるのを防ぐ
+const DENSIFY_MIN_DEPTH=0.06; // 裏面までこれだけ余裕が無い場所には増設しない（軸が裏へ突き抜けるため）
 function densifyScrews(slots){
   houseGroup.updateMatrixWorld(true);
   const rc=new THREE.Raycaster();
+  const rcBack=new THREE.Raycaster(); rcBack.far=REACH*2+1; // 裏面までの余裕を測る用
   const q=new THREE.Quaternion(), nm=new THREE.Matrix3();
   // 面を測る。最初に当たったのが期待パーツでなければ null（＝遮蔽 or 面が無い）
   // 戻り値: {dist, point, normal} normal は外向きのワールド法線（曲面にも沿わせられる）
@@ -3909,6 +3939,7 @@ function densifyScrews(slots){
             // 面からの浮き量は元ネジと同じにする（box 定義は面のすぐ外、kit は 0.12 めり込み）
             const seat=hit.point.clone().addScaledVector(hit.normal,ref.dist-REACH);
             if(occupied.some(o=>o.distanceTo(seat)<DENSIFY_MIN_DIST)) continue;
+            if(backDepth(rcBack,seat,hit.normal,plankId)<DENSIFY_MIN_DEPTH) continue; // 薄すぎて軸が裏へ出る
             const lpv=node.worldToLocal(seat.clone());
             const lnv=hit.normal.clone().applyQuaternion(q.clone().invert()).normalize();
             occupied.push(seat);
@@ -3979,6 +4010,7 @@ function buildLevel(){
   densifyScrews(screwSlots);            // ネジを最大2倍に増設（レイ検証つき）
   trimToMultiple(screwSlots);           // 総本数を3の倍数に揃える（端数トレイを作らない）
   if(lv.model) deriveBlockers(screwSlots); // kit モデルは遮蔽を実測（box 定義は blockedBy を使う）
+  measureDepths(screwSlots);            // 薄い部品で軸が裏へ突き抜けないよう、裏面までの余裕を測る
 
   // kit モデルは高さがバラバラなので、実際のバウンディングボックスから注視点と距離を自動計算。
   // box 定義のレベルは従来どおり（lv.model があり camY/camRad 未指定のときだけ上書き）
@@ -4020,6 +4052,7 @@ function buildLevel(){
   // build screw meshes (as children of their plank), in original slot list order
   screwSlots.forEach(slot=>{
     const grp=makeScrew(slot.color);
+    fitShaft(grp,slot.depth); // 薄い部品では軸を縮めて裏への突き抜けを防ぐ
     grp.position.set(slot.lp[0],slot.lp[1],slot.lp[2]);
     grp.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(...slot.ln).normalize());
     grp.userData.head.userData.screwId=slot.id;
@@ -4044,7 +4077,7 @@ function buildLevel(){
     paintTray(t); trays.push(t);
   }
   renderQueue();
-  refreshLocks(); // 最初から外せないネジに錠マークを出す
+  refreshLocks(); // 最初から外せないネジを暗く表示する
 }
 
 /* ---------- 遮蔽判定（blockers） ----------
@@ -4333,7 +4366,7 @@ function flashBlockers(ids){
 }
 function dropPlank(pk){
   sfx('thunk'); plankDropped.add(pk.id);
-  refreshLocks(); // このパーツが外れて解放されたネジの錠を外す
+  refreshLocks(); // このパーツが外れて解放されたネジを通常表示に戻す
   pk.mats.forEach(m=>{m.transparent=true;});
   const start={x:pk.mesh.position.x,y:pk.mesh.position.y}; const dir=Math.random()<.5?-1:1;
   const rz=pk.mesh.rotation.z;
