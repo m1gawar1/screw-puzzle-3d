@@ -4092,9 +4092,18 @@ function buildLevel(){
      呼ぶ前に houseGroup.updateMatrixWorld(true) 済みであること。
      ※ ネジのメッシュを生成する前に呼ぶこと（透明な当たり判定球がレイを遮るため） */
 const REACH=6; // ネジ頭より外側のこの距離からレイを撃つ
+// 1本のレイだけで判定すると、ネジのはるか前方にあるだけのパーツや、頭のフチをかすっただけの
+// パーツまで遮蔽になり「見た目は何も被っていないのに外せない」状態になる。
+// そこでネジ頭の面を7本のレイで走査し、しっかり覆っていて、かつ近いパーツだけを遮蔽とする。
+const BLOCK_RAYS=7;      // 中心1本＋周囲6本
+const BLOCK_HEAD_R=0.19; // 周囲レイを撃つ半径（ネジ頭の半径に合わせる）
+const BLOCK_HIT_MIN=3;   // 7本中これだけ当たれば「覆っている」とみなす
+const BLOCK_GAP_MAX=1.0; // ネジからこの距離より遠いパーツは遮蔽にしない（レイの到達距離）
 function deriveBlockers(slots){
   const rc=new THREE.Raycaster();
-  rc.far=REACH; // ネジ位置より奥は遮蔽ではないので探索を打ち切る
+  // ネジ位置から外向きに BLOCK_GAP_MAX だけ撃つ。外側から撃つと厚い部品では
+  // 「向こう側の面までの距離」を測ってしまうので、必ずネジ側から撃つこと。
+  rc.far=BLOCK_GAP_MAX;
   const v=new THREE.Vector3(), n=new THREE.Vector3(), q=new THREE.Quaternion();
   // 「blocker を先に落とす」制約グラフ。追加で循環ができる制約は破棄する
   const before={}; // blocker -> Set(owner)
@@ -4105,22 +4114,37 @@ function deriveBlockers(slots){
       (before[c]||[]).forEach(x=>st.push(x)); }
     return false;
   };
+  const u=new THREE.Vector3(), w=new THREE.Vector3(), t=new THREE.Vector3(), sp=new THREE.Vector3();
   slots.forEach(slot=>{
     slot.node.getWorldQuaternion(q);
     n.set(slot.ln[0],slot.ln[1],slot.ln[2]).normalize().applyQuaternion(q).normalize();
     v.set(slot.lp[0],slot.lp[1],slot.lp[2]); slot.node.localToWorld(v);
-    rc.set(v.clone().addScaledVector(n,REACH), n.clone().negate());
+    // ネジ頭の面内に直交2軸をつくり、中心＋周囲6点の計7本を撃つ
+    t.set(Math.abs(n.x)>0.9?0:1, Math.abs(n.x)>0.9?1:0, 0);
+    u.crossVectors(n,t).normalize(); w.crossVectors(n,u).normalize();
+    const rays=Math.max(1,BLOCK_RAYS), cnt={}, gap={};
+    for(let i=0;i<rays;i++){
+      sp.copy(v);
+      if(i>0){ const a=(i-1)*Math.PI*2/(rays-1);
+        sp.addScaledVector(u,Math.cos(a)*BLOCK_HEAD_R).addScaledVector(w,Math.sin(a)*BLOCK_HEAD_R); }
+      rc.set(sp.clone().addScaledVector(n,0.002), n.clone());
+      const seen=new Set();
+      for(const h of rc.intersectObject(houseGroup,true)){
+        let o=h.object, owner=null, isScrew=false;
+        while(o){ if(o.userData.isScrew){isScrew=true;break;} if(o.userData.plankId){owner=o.userData.plankId;break;} o=o.parent; }
+        if(isScrew||!owner||owner===slot.plankId||seen.has(owner)) continue;
+        seen.add(owner);
+        cnt[owner]=(cnt[owner]||0)+1;
+        if(gap[owner]===undefined||h.distance<gap[owner]) gap[owner]=h.distance;
+      }
+    }
     const found=[];
-    for(const h of rc.intersectObject(houseGroup,true)){
-      if(h.distance>=REACH-0.02) break;      // ネジ位置より奥＝遮蔽ではない
-      let o=h.object, owner=null, isScrew=false;
-      while(o){ if(o.userData.isScrew){isScrew=true;break;} if(o.userData.plankId){owner=o.userData.plankId;break;} o=o.parent; }
-      if(isScrew||!owner||owner===slot.plankId) continue;
-      if(found.includes(owner)) continue;
-      if(reaches(slot.plankId,owner)) continue; // 循環になるので無視
+    Object.keys(cnt).forEach(owner=>{
+      if(cnt[owner]<BLOCK_HIT_MIN) return;        // 頭のフチをかすっているだけ
+      if(reaches(slot.plankId,owner)) return;     // 循環になるので無視
       found.push(owner);
       (before[owner]=before[owner]||new Set()).add(slot.plankId);
-    }
+    });
     slot.blockers=found;
   });
 }
