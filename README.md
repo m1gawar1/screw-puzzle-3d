@@ -20,3 +20,9 @@
 
 - three.js r128 — MIT License, Copyright 2010-2021 Three.js Authors
 - Fredoka — SIL Open Font License 1.1
+
+## おまけ：雪原サバイバル・ラン（`whiteout-run.html`）
+
+雪原を走ってゲートで仲間を増やし、最後の氷の怪物を倒す、広告でよく見るタイプのミニゲーム。
+ブラウザで `whiteout-run.html` を開くだけで遊べる（スマホはドラッグ、PC は ←→ / A D キー）。
+特定のゲームとは無関係の、遊び方だけ似せたオリジナル作品。
