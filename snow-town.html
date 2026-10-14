@@ -56,15 +56,15 @@ addEventListener('resize',resize);resize();
 if(!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
 
 /* ================= world layout ================= */
-const WW=2400,WH=2560;
+const WW=2400,WH=2700;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const R=(a,b)=>a+Math.random()*(b-a);
 let seed=11;const rand=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646};
 const ZONE={
   A:{x0:80,x1:2320,y0:690,y1:1110,name:'森'},
-  B:{x0:70,x1:640,y0:1200,y1:2510,name:'鉱山'},
-  C:{x0:1770,x1:2330,y0:1200,y1:2510,name:'氷原'},
+  B:{x0:70,x1:640,y0:1200,y1:2650,name:'鉱山'},
+  C:{x0:1770,x1:2330,y0:1200,y1:2650,name:'氷原'},
   D:{x0:80,x1:2320,y0:80,y1:590,name:'白熊の巣'},
 };
 const RES=['log','ore','pelt','meat','fish','crystal'];
@@ -100,9 +100,15 @@ const PADS=[
  {id:'kitchen',name:'料理屋',x:1210,y:1830,cost:one({log:60,ore:20,coin:200}),req:['house3','mine'],desc:'肉と薪でシチューを作って高く売る'},
  {id:'hotspring',name:'温泉',x:1300,y:2500,cost:one({coin:4000,ore:120,log:150}),req:['polar'],desc:'働き手と犬の足が速くなり、体力の回復も速くなる'},
  {id:'castle',name:'雪の城',x:1520,y:2500,cost:one({coin:15000,ore:300,pelt:60,crystal:30}),req:['bigfurnace'],desc:'家賃が2倍になった！ 雪原の王になった'},
- {id:'fisher',name:'漁師小屋',x:1590,y:1660,cost:one({coin:200,log:30}),req:['ice'],desc:'漁師が氷原で魚を釣って市場へ運ぶ'},
+ {id:'fisher',name:'漁師小屋',x:1610,y:1665,cost:one({coin:200,log:30}),req:['ice'],desc:'漁師が氷原で魚を釣って市場へ運ぶ'},
  {id:'trade',name:'交易所',x:1520,y:1985,cost:one({log:60,ore:40}),req:['polar'],desc:'氷晶とあまった石を買い取ってくれる'},
  {id:'lighthouse',name:'氷の灯台',x:750,y:2500,cost:one({crystal:20,coin:3000}),req:['trade'],desc:'クマと白熊がすぐ戻り、補給物資が豪華になる'},
+ {id:'polarhut',name:'白熊ハンター小屋',x:1300,y:1050,cost:one({coin:600,log:60,ore:30}),req:['polar'],desc:'白熊ハンターが氷晶と白熊の素材を倉庫に集める'},
+ {id:'merchant',name:'資材商',x:1450,y:2630,cost:one({coin:300,log:40}),req:['warehouse'],desc:'お金で素材を買えるようになった'},
+ {id:'arch5',name:'矢倉',x:820,y:1160,cost:one({log:60,ore:30,coin:300}),req:['arch3'],desc:'襲撃者を矢で自動攻撃（守りが固いほど襲撃も強くなる）'},
+ {id:'arch6',name:'矢倉',x:1600,y:1160,cost:one({log:60,ore:30,coin:300}),req:['arch4'],desc:'襲撃者を矢で自動攻撃（守りが固いほど襲撃も強くなる）'},
+ {id:'arch7',name:'矢倉',x:690,y:1900,cost:one({log:80,ore:50,coin:600}),req:['arch5'],desc:'襲撃者を矢で自動攻撃（守りが固いほど襲撃も強くなる）'},
+ {id:'arch8',name:'矢倉',x:1710,y:1900,cost:one({log:80,ore:50,coin:600}),req:['arch6'],desc:'襲撃者を矢で自動攻撃（守りが固いほど襲撃も強くなる）'},
  {id:'arch1',name:'矢倉',x:1000,y:1160,cost:one({log:40,coin:100}),req:['wall'],desc:'襲撃者を矢で自動攻撃'},
  {id:'arch2',name:'矢倉',x:1420,y:1160,cost:one({log:40,coin:100}),req:['wall'],desc:'襲撃者を矢で自動攻撃'},
  {id:'arch3',name:'矢倉',x:690,y:1430,cost:one({log:50,coin:150}),req:['wall','arch1'],desc:'襲撃者を矢で自動攻撃'},
@@ -116,8 +122,8 @@ const PADS=[
  {id:'whup',name:'倉庫を拡張',x:1650,y:2140,max:4,cost:l=>({coin:Math.round(80*Math.pow(1.8,l)),log:20*(l+1)}),req:['warehouse'],up:true},
  {id:'hireL',name:'木こりを雇う',x:750,y:2260,max:6,cost:l=>({coin:Math.round(80*Math.pow(1.5,l))}),req:['lumber'],up:true},
  {id:'hireH',name:'狩人を雇う',x:930,y:2260,max:6,cost:l=>({coin:Math.round(100*Math.pow(1.5,l))}),req:['hunter'],up:true},
- {id:'hireM',name:'鉱夫を雇う',x:1110,y:2260,max:3,cost:l=>({coin:Math.round(120*Math.pow(1.7,l))}),req:['minehut'],up:true},
- {id:'hireT',name:'罠師を雇う',x:1290,y:2260,max:3,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['trapper'],up:true},
+ {id:'hireM',name:'鉱夫を雇う',x:1110,y:2260,max:6,cost:l=>({coin:Math.round(120*Math.pow(1.7,l))}),req:['minehut'],up:true},
+ {id:'hireT',name:'罠師を雇う',x:1290,y:2260,max:6,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['trapper'],up:true},
  {id:'hireP',name:'運搬係を雇う',x:1470,y:2260,max:2,cost:l=>({coin:Math.round(100*Math.pow(1.7,l))}),req:['warehouse'],up:true},
  {id:'hireC',name:'集金係を雇う',x:1650,y:2260,max:2,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['vault'],up:true},
  {id:'arrow',name:'矢の強化',x:930,y:2380,max:5,cost:l=>({coin:Math.round(100*Math.pow(1.8,l)),ore:10*(l+1)}),req:['arch1','mine'],up:true},
@@ -126,6 +132,7 @@ const PADS=[
  {id:'statue',name:'英雄の像',x:930,y:2500,max:5,cost:l=>({coin:Math.round(1500*Math.pow(2,l)),ore:40*(l+1)}),req:['smithy','peltshop'],up:true},
  {id:'feast',name:'大宴会を開く',x:1110,y:2500,max:999,cost:l=>({coin:2000,meat:10}),req:['kitchen'],up:true},
  {id:'hireF',name:'漁師を雇う',x:1650,y:2380,max:3,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['fisher'],up:true},
+ {id:'hireB',name:'白熊ハンターを雇う',x:1650,y:2500,max:3,cost:l=>({coin:Math.round(800*Math.pow(1.7,l)),crystal:5*(l+1)}),req:['polarhut'],up:true},
  {id:'iceaxe',name:'氷晶の斧',x:750,y:2380,max:3,cost:l=>({coin:Math.round(4000*Math.pow(2,l)),crystal:10*(l+1)}),req:['trade'],up:true},
  {id:'chef',name:'料理人を雇う',x:1470,y:2380,max:3,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['kitchen'],up:true},
 ];
@@ -159,6 +166,10 @@ const STORE_T=['log','ore','pelt','meat','fish','crystal'];
 const DEPO={x:1000,y:1890};
 const WDZ=STORE_T.map((type,i)=>({type,x:740+i*90,y:1995}));
 const VZ={x:1400,y:1890};
+const BUYP={log:10,ore:14,pelt:40,meat:18,fish:20,crystal:220};
+const BZ=Object.keys(BUYP).map((type,i)=>({type,x:740+i*95,y:2630}));
+const DLV={x:1105,y:1890};
+const DLV_NAME=['半分ずつ','お店優先','倉庫優先'];
 const RENT=[5,6,8,10,12,15];
 for(let i=1;i<=6;i++){const h=PADBY['house'+i];PILES.push({id:'ph'+i,x:h.x+58,y:h.y+42,type:'coin',req:'house'+i,rent:RENT[i-1],rt:0})}
 
@@ -192,7 +203,7 @@ function wallHit(x0,y0,x1,y1,canGate){
   for(const[wx,g]of sides)if((x0<wx)!==(x1<wx)&&y1>WALL.y0-3){if(!(canGate(g)&&y1>g.lo&&y1<g.hi))return true}
   return false;
 }
-const TOWERS=['tower','arch1','arch2','arch3','arch4'];
+const TOWERS=['tower','arch1','arch2','arch3','arch4','arch5','arch6','arch7','arch8'];
 const MISSIONS=[
  {txt:'木を10本切る',k:'tree',n:10,r:20},
  {txt:'クマを3頭倒す',k:'bear',n:3,r:30},
@@ -230,19 +241,20 @@ function curMission(){
 function absStat(k){
   if(k==='houses')return[1,2,3,4,5,6].filter(i=>built('house'+i)).length;
   if(k==='statueb')return lv.statue;if(k==='springb')return lv.hotspring;if(k==='castleb')return lv.castle;if(k==='wallb')return lv.wall;if(k==='dogb')return lv.doghouse;if(k==='kitb')return lv.kitchen;
-  if(k==='archb')return['arch1','arch2','arch3','arch4'].filter(built).length;
+  if(k==='archb')return['arch1','arch2','arch3','arch4','arch5','arch6','arch7','arch8'].filter(built).length;
   return 0;
 }
 const misProg=m=>m.abs?absStat(m.k):(stats[m.k]||0)-misBase;
 const ET={
   bear:{hp:6,sp:40,chase:88,dmg:1,cd:1.1,size:1,drop:{meat:4},zone:'A',aggro:230,resp:8,n:12},
-  wolf:{hp:4,sp:60,chase:150,dmg:1,cd:.8,size:.75,drop:{pelt:1,meat:1},zone:'C',aggro:260,resp:10,n:7},
+  wolf:{hp:4,sp:60,chase:150,dmg:1,cd:.8,size:.75,drop:{pelt:1,meat:1},zone:'C',aggro:260,resp:7,n:11},
   polar:{hp:60,sp:30,chase:72,dmg:3,cd:1.5,size:1.8,drop:{meat:6,pelt:4,crystal:3},zone:'D',aggro:250,resp:40,n:4},
   raider:{hp:6,sp:95,chase:95,dmg:1,cd:1,size:.85,drop:{},zone:'A',aggro:150,resp:0,n:0},
+  alpha:{hp:6,sp:80,chase:80,dmg:2,cd:1,size:1.45,drop:{pelt:5,crystal:1},zone:'A',aggro:150,resp:0,n:0},
 };
 
 /* ================= state ================= */
-let feastT=0,stats,mis,misBase,raid,raiders,arrows,dog,store,vaultN,P,money,lv,paid,enemies,items,flyers,parts,texts,customers,npcs,pileN,crate,crateT,t=0,toastT=0,toastMsg='',started=false,won=false,saveT=0;
+let deliv=0,dlvIn=false,buyT=0,feastT=0,stats,mis,misBase,raid,raiders,arrows,dog,store,vaultN,P,money,lv,paid,enemies,items,flyers,parts,texts,customers,npcs,pileN,crate,crateT,t=0,toastT=0,toastMsg='',started=false,won=false,saveT=0;
 let arrowDmg,arrowInt,storeCap,dmg,atkInt,cap,speed,priceMult,meatPrice,peltPrice;
 const built=id=>lv[id]>=1;
 function recompute(){
@@ -269,7 +281,7 @@ function reset(){
   items=[];flyers=[];parts=[];texts=[];npcs=[];pileN={};for(const p of PILES)pileN[p.id]=0;
   for(const s of SHOPS){s.stock=0;s.buyT=0;if(s.extra)s.extra.n=0}
   customers=[];crate=null;crateT=40;store={log:0,ore:0,pelt:0,meat:0,fish:0,crystal:0};vaultN=0;
-  stats={};mis=0;misBase=0;raid={active:false,t:null,no:0,stolen:0};raiders=[];arrows=[];dog=null;KITCHEN.ing={meat:0,fish:0,log:0};KITCHEN.cookT=0;for(const h of HOLES)h.cd=0;
+  deliv=0;stats={};mis=0;misBase=0;raid={active:false,t:null,no:0,stolen:0};raiders=[];arrows=[];dog=null;KITCHEN.ing={meat:0,fish:0,log:0};KITCHEN.cookT=0;for(const h of HOLES)h.cd=0;
   for(const n of nodes){n.alive=true;n.hp=n.max}
   recompute();
 }
@@ -277,9 +289,9 @@ const shopOpen=s=>!s.req||built(s.req);
 const pileOn=p=>!p.req||built(p.req);
 function syncNPCs(){
   const want={lumber:(built('lumber')?1:0)+lv.hireL,hunter:(built('hunter')?1:0)+lv.hireH,miner:(built('minehut')?1:0)+lv.hireM,
-    trapper:(built('trapper')?1:0)+lv.hireT,fisher:(built('fisher')?1:0)+lv.hireF,porter:(built('warehouse')?1:0)+lv.hireP,collector:(built('vault')?1:0)+lv.hireC};
+    trapper:(built('trapper')?1:0)+lv.hireT,polarh:(built('polarhut')?1:0)+lv.hireB,fisher:(built('fisher')?1:0)+lv.hireF,porter:(built('warehouse')?1:0)+lv.hireP,collector:(built('vault')?1:0)+lv.hireC};
   if(built('doghouse')&&!dog)dog={x:PADBY.doghouse.x,y:PADBY.doghouse.y+40,carry:[],tg:null,walk:0,face:1};
-  const HOME={lumber:'lumber',hunter:'hunter',miner:'minehut',trapper:'trapper',fisher:'fisher',porter:'warehouse',collector:'vault'};
+  const HOME={lumber:'lumber',hunter:'hunter',miner:'minehut',trapper:'trapper',polarh:'polarhut',fisher:'fisher',porter:'warehouse',collector:'vault'};
   for(const k in want){
     const home=PADBY[HOME[k]];
     while(npcs.filter(n=>n.kind===k).length<want[k])npcs.push({kind:k,x:home.x+R(-20,20),y:home.y+50,state:'seek',tg:null,atkT:0,walk:0,face:1,swing:0,carry:0});
@@ -294,14 +306,16 @@ function save(){try{
   const HP={lumber:'plog',miner:'pore',trapper:'ppl'};
   for(const n of npcs){
     if(n.kind==='collector')vn+=n.cash||0;
+    else if(n.kind==='polarh'){}
     else if(!n.carry)continue;
     else if(HP[n.kind])pn[HP[n.kind]]+=n.carry;
     else if(n.kind==='hunter')st.meat+=n.carry;
     else if(n.kind==='fisher')st.fish+=n.carry;
+    else if(n.kind==='polarh'&&n.bag)for(const k in n.bag)st[k]+=n.bag[k];
     else if(n.kind==='porter'){if(n.state==='retk')ing[n.ctype==='log'?'log':n.ctype]+=n.carry;else st[n.ctype]+=n.carry}
   }
   const stack=P.stack.concat(dog?dog.carry:[]);
-  localStorage.setItem(KEY,JSON.stringify({money,lv,paid,stock,ex,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,ts:Date.now()}));
+  localStorage.setItem(KEY,JSON.stringify({money,lv,paid,stock,ex,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,ts:Date.now()}));
 }catch(e){}}
 function load(){
   try{
@@ -311,7 +325,7 @@ function load(){
     for(const id in d.paid||{})if(id in paid)paid[id]=Object.assign(ZP(),d.paid[id]);
     money=d.money||0;(d.stock||[]).forEach((n,i)=>{if(SHOPS[i])SHOPS[i].stock=n});(d.ex||[]).forEach((n,i)=>{if(SHOPS[i]&&SHOPS[i].extra)SHOPS[i].extra.n=n});
     Object.assign(pileN,d.pileN||{});Object.assign(store,d.store||{});vaultN=d.vaultN||0;
-    stats=d.stats||{};mis=d.mis||0;misBase=d.misBase||0;if(d.raid){raid.no=d.raid.no||0;raid.t=d.raid.t==null?null:d.raid.t<=20?20:Math.max(60,d.raid.t)}Object.assign(KITCHEN.ing,d.ing||{});feastT=d.feastT||0;
+    stats=d.stats||{};mis=d.mis||0;misBase=d.misBase||0;if(d.raid){raid.no=d.raid.no||0;raid.t=d.raid.t==null?null:d.raid.t<=20?20:Math.max(60,d.raid.t)}Object.assign(KITCHEN.ing,d.ing||{});feastT=d.feastT||0;deliv=d.deliv||0;
     recompute();P.hp=P.maxHp;syncNPCs();
     P.stack=(d.stack||[]).filter(k=>RES.includes(k)).slice(0,Math.max(cap,40));
     return true;
@@ -360,6 +374,24 @@ function hurtP(d){
   sfx('hurt',.2);P.hp-=d;P.hurtT=.3;P.lastHit=0;addText(P.x,P.y-60,'-'+d,'#ff6060');
   if(P.hp<=0){for(const s of P.stack)dropItem(P.x,P.y,s);P.stack=[];P.x=1200;P.y=1560;P.hp=P.maxHp;toast('やられた…町に戻った（荷物はその場に落ちた）')}
 }
+function pickDest(n,shopOk,whOk){
+  if(!built('warehouse'))return shopOk?'shop':null;
+  let pref=deliv===1?'shop':deliv===2?'wh':((n.alt=!n.alt)?'shop':'wh');
+  if(pref==='shop')return shopOk?'shop':whOk?'wh':null;
+  return whOk?'wh':shopOk?'shop':null;
+}
+function deliver(n,res,shop,sx,sy,sp,dt,pile){
+  const shopOk=!!shop&&shopOpen(shop)&&shopN(shop,res)<shopCap(shop,res),whOk=built('warehouse')&&store[res]<storeCap;
+  if(!n.dest)n.dest=pickDest(n,shopOk,whOk);
+  const tx=n.dest==='wh'?DEPO.x-40:n.dest==='shop'||!pile?sx:pile.x,ty=n.dest==='wh'?DEPO.y:n.dest==='shop'||!pile?sy:pile.y-12;
+  if(walkVia(n,tx,ty,sp,dt)<8){
+    if(n.dest==='wh'){const k=Math.min(n.carry,storeCap-store[res]);store[res]+=k;n.carry-=k}
+    else if(n.dest==='shop'){const k=Math.min(n.carry,shopCap(shop,res)-shopN(shop,res));shopAdd(shop,res,k);n.carry-=k}
+    else if(pile){const k=Math.min(n.carry,Math.max(0,60-pileN[pile.id]));pileN[pile.id]+=k;n.carry-=k}
+    n.dest=null;if(n.carry<=0){n.carry=0;return true}
+  }
+  return false;
+}
 function walkVia(o,x,y,sp,dt){
   if(built('hotspring'))sp*=1.3;
   if(built('wall')&&inWalls(o.x,o.y)!==inWalls(x,y)){
@@ -372,21 +404,25 @@ function walkVia(o,x,y,sp,dt){
   }
   o.via=false;return walkTo(o,x,y,sp,dt);
 }
+const defense=()=>TOWERS.filter(built).length+.5*lv.arrow+.5*lv.gateup;
+function raidSize(){const d=defense();return{n:Math.min(36,Math.round((3+raid.no*2)*(1+d*.12))),hp:Math.round((5+raid.no*2)*(1+d*.08)),boss:d>=10?2:d>=6?1:0,mult:1+d*.15}}
 function startRaid(){
   raid.active=true;raid.stolen=0;sfx('horn',1);
-  const n=Math.min(18,3+raid.no*2),sp=[{x:[900,1500],y:[720,760]}];
+  const rs=raidSize();raid.mult=rs.mult;
+  const n=rs.n,sp=[{x:[900,1500],y:[720,760]}];
   if(built('mine'))sp.push({x:[200,450],y:[1450,1650]});if(built('ice'))sp.push({x:[1950,2200],y:[1450,1650]});
   for(let i=0;i<n;i++){
     const s=sp[i%sp.length],x=R(s.x[0],s.x[1]),y=R(s.y[0],s.y[1]);
     const gate=y<WALL.y0?GATES[0]:x<WALL.x0?GATES[1]:GATES[2];
-    raiders.push({type:'raider',x,y,hp:5+raid.no*2,max:5+raid.no*2,alive:true,atkT:0,flash:0,face:1,walk:0,gate,dmg:1+Math.floor(raid.no/3),sp:R(85,105)});
+    const boss=i<rs.boss,hp=boss?rs.hp*4:rs.hp;
+    raiders.push({type:boss?'alpha':'raider',x,y,hp,max:hp,alive:true,atkT:0,flash:0,face:1,walk:0,gate,dmg:(1+Math.floor(raid.no/3))*(boss?2:1),gdmg:(1+Math.floor(raid.no/3))*(boss?3:1),sp:boss?R(70,80):R(85,105)});
   }
-  toast('襲撃だ！ 狼の群れが村に向かってくる！');
+  toast(`襲撃だ！ 狼の群れ ${n}体${rs.boss?`（大狼×${rs.boss}）`:''}が向かってくる！`);
 }
 function endRaid(){
   raid.active=false;raiders=[];raid.no++;stat('raid');
   for(const g of GATES)g.hp=g.max;
-  if(raid.stolen===0){const b=30+raid.no*20;money+=b;toast(`襲撃をしのいだ！ ボーナス +${b}`);addText(P.x,P.y-80,'+'+b,'#ffd34d')}
+  if(raid.stolen===0){const b=Math.round((30+raid.no*20)*(raid.mult||1));money+=b;toast(`襲撃をしのいだ！ ボーナス +${b}`);addText(P.x,P.y-80,'+'+b,'#ffd34d')}
   else toast(`襲撃は終わった…（${raid.stolen}コイン盗まれた）`);
   raid.t=R(150,210);save();
 }
@@ -432,7 +468,7 @@ function update(dt){
   if(built('ice')){
     const h=HOLES.find(h=>Math.hypot(h.x-P.x,h.y-P.y)<60);
     if(h){if(P.atkT<=0){P.fishT=(P.fishT||0)+dt;P.swing=Math.max(P.swing,.3);
-      if(P.fishT>1.5){P.fishT=0;if(Math.random()<.7){dropItem(h.x,h.y,'fish');stat('fish');puff(h.x,h.y-10,10,'#bfe8ff');sfx('splash')}}}}
+      if(P.fishT>1.1){P.fishT=0;if(Math.random()<.7){dropItem(h.x,h.y,'fish');stat('fish');puff(h.x,h.y-10,10,'#bfe8ff');sfx('splash')}}}}
     else P.fishT=0;
   }
   for(const n of nodes){n.wob=Math.max(0,n.wob-dt);if(!n.alive){n.rt-=dt;if(n.rt<=0&&dist(n,P)>90){n.alive=true;n.hp=n.max}}}
@@ -505,6 +541,11 @@ function update(dt){
   }
   if(built('vault')&&vaultN>0&&Math.hypot(P.x-VZ.x,P.y-VZ.y)<50){const a=Math.max(1,Math.ceil(vaultN/10));vaultN-=a;money+=a;sfx('coin',.09);if(Math.random()<.6)flyTo(VZ.x,VZ.y-30,P.x,P.y-40,'coin')}
 
+  /* merchant & delivery toggle */
+  if(built('merchant')){const z=BZ.find(z=>Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);
+    if(z){buyT+=dt;while(buyT>.08){buyT-=.08;const pr=BUYP[z.type];if(money<pr||P.stack.length>=cap){buyT=0;break}money-=pr;P.stack.push(z.type);fly(z.x,z.y-10,z.type);sfx('sell',.1)}}else buyT=0}
+  if(built('warehouse')){const inn=Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26;if(inn&&!dlvIn){deliv=(deliv+1)%3;toast('素材の配送先：'+DLV_NAME[deliv]);sfx('up',.2)}dlvIn=inn}
+
   /* pads */
   for(const p of PADS){
     if(!visible(p))continue;
@@ -529,23 +570,35 @@ function update(dt){
       const home=n.kind==='lumber'?PILES.find(p=>p.id==='plog'):PILES.find(p=>p.id==='pore'),want=n.kind==='lumber'?'tree':'rock';
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive){let bd=1e9;n.tg=null;for(const nd of nodes)if(nd.alive&&nd.kind===want&&(want==='rock'||nd.y>ZONE.A.y0)){const d=Math.hypot(nd.x-home.x,nd.y-home.y);if(d<bd&&!npcs.some(o=>o!==n&&o.tg===nd)){bd=d;n.tg=nd}}}
-        if(n.tg&&walkVia(n,n.tg.x-30,n.tg.y+8,115,dt)<6&&n.atkT<=0){n.atkT=.8;n.swing=1;n.face=1;n.tg.hp--;n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,n.kind==='miner'?'#c9d3dd':'#fff');if(n.tg.hp<=0){killNode(n.tg);n.carry=n.kind==='lumber'?3:2;n.state='ret'}}
+        if(n.tg&&walkVia(n,n.tg.x-30,n.tg.y+8,115,dt)<6&&n.atkT<=0){n.atkT=.8;n.swing=1;n.face=1;n.tg.hp--;n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,n.kind==='miner'?'#c9d3dd':'#fff');if(n.tg.hp<=0){killNode(n.tg);n.carry=n.kind==='lumber'?3:4;n.state='ret'}}
       }else if(walkVia(n,home.x,home.y-12,115,dt)<6){if(pileN[home.id]<60)pileN[home.id]+=n.carry;n.carry=0;n.state='seek';n.tg=null}
     }else if(n.kind==='trapper'){
       const home=PILES.find(p=>p.id==='ppl');
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='wolf'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
-        if(n.tg&&walkVia(n,n.tg.x-34,n.tg.y+6,135,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,2,false);if(!n.tg.alive){n.carry=2;n.state='ret'}}
-      }else{const ps=SHOPS[1],toShop=shopOpen(ps)&&ps.stock<ps.cap,tx=toShop?ps.x-60:home.x,ty=toShop?ps.y+45:home.y-12;
-        if(walkVia(n,tx,ty,135,dt)<8){if(toShop)ps.stock=Math.min(ps.cap,ps.stock+n.carry);else if(pileN.ppl<60)pileN.ppl+=n.carry;n.carry=0;n.state='seek';n.tg=null}}
+        if(n.tg&&walkVia(n,n.tg.x-34,n.tg.y+6,135,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,2,false);if(!n.tg.alive){n.carry=3;n.state='ret'}}
+      }else{const ps=SHOPS[1];if(deliver(n,'pelt',ps,ps.x-60,ps.y+45,135,dt,home)){n.state='seek';n.tg=null}}
     }else if(n.kind==='fisher'){
       const mk=SHOPS[0];
       if(n.state==='seek'){
         if(!n.tg||npcs.some(o=>o!==n&&o.tg===n.tg)){n.tg=HOLES.filter(h=>!npcs.some(o=>o!==n&&o.tg===h)).sort((a,b)=>Math.hypot(a.x-n.x,a.y-n.y)-Math.hypot(b.x-n.x,b.y-n.y))[0]||HOLES[0]}
-        if(walkVia(n,n.tg.x-34,n.tg.y+6,120,dt)<8){n.face=1;n.fishT=(n.fishT||0)+dt;n.swing=.3;if(n.fishT>2.2){n.fishT=0;if(Math.random()<.7){n.carry++;puff(n.tg.x,n.tg.y-10,6,'#bfe8ff')}if(n.carry>=3)n.state='ret'}}
-      }else{const room=mk.extra.n<mk.extra.cap,toW=!room&&built('warehouse')&&store.fish<storeCap,tx=toW?DEPO.x-40:mk.x+70,ty=toW?DEPO.y:mk.y+45;
-        if(walkVia(n,tx,ty,120,dt)<8){if(toW){const k=Math.min(n.carry,storeCap-store.fish);store.fish+=k;n.carry-=k}else if(room){const k=Math.min(n.carry,mk.extra.cap-mk.extra.n);mk.extra.n+=k;n.carry-=k}
-          if(n.carry<=0){n.carry=0;n.state='seek'}}}
+        if(walkVia(n,n.tg.x-34,n.tg.y+6,120,dt)<8){n.face=1;n.fishT=(n.fishT||0)+dt;n.swing=.3;if(n.fishT>1.4){n.fishT=0;if(Math.random()<.85){n.carry++;puff(n.tg.x,n.tg.y-10,6,'#bfe8ff')}if(n.carry>=6)n.state='ret'}}
+      }else if(deliver(n,'fish',mk,mk.x+70,mk.y+45,130,dt))n.state='seek';
+    }else if(n.kind==='polarh'){
+      if(n.state==='seek'){
+        if(!n.tg||(n.tg.alive===false)||(n.tg.type&&!enemies.includes(n.tg))){n.tg=null;let bd=1e9;
+          for(const e of enemies)if(e.alive&&e.type==='polar'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}
+          if(!n.tg)for(const nd of nodes)if(nd.alive&&nd.kind==='crystal'&&!npcs.some(o=>o!==n&&o.tg===nd)){const d=Math.hypot(nd.x-n.x,nd.y-n.y);if(d<bd){bd=d;n.tg=nd}}}
+        if(n.tg){const isB=!!n.tg.type,r=isB?60:30;
+          if(walkVia(n,n.tg.x-r,n.tg.y+6,135,dt)<(isB?14:8)&&n.atkT<=0){n.atkT=isB?.6:.7;n.swing=1;n.face=1;
+            if(isB){hitEnemy(n.tg,6,false);if(!n.tg.alive){n.bag={meat:6,pelt:4,crystal:3};n.state='ret'}}
+            else{n.tg.hp-=2;n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,'#9fe6ff');if(n.tg.hp<=0){killNode(n.tg);n.bag={crystal:2};n.state='ret'}}}}
+        else walkVia(n,PADBY.polarhut.x+40,PADBY.polarhut.y+50,90,dt);
+      }else{
+        const tx=built('warehouse')?DEPO.x-40:PADBY.polarhut.x,ty=built('warehouse')?DEPO.y:PADBY.polarhut.y+60;
+        if(walkVia(n,tx,ty,135,dt)<8){for(const k in n.bag){let v=n.bag[k];if(built('warehouse')){const a=Math.min(v,storeCap-store[k]);store[k]+=a;v-=a}for(let i=0;i<v;i++)dropItem(n.x,n.y,k)}n.bag=null;n.state='seek';n.tg=null}
+      }
+      n.carry=n.bag?Math.min(8,Object.values(n.bag).reduce((a,b)=>a+b,0)):0;
     }else if(n.kind==='porter'){
       const K=KITCHEN;
       if(n.state==='seek'&&built('kitchen')&&built('warehouse')&&!npcs.some(o=>o!==n&&(o.state==='getk'||o.state==='retk'))){
@@ -572,9 +625,7 @@ function update(dt){
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='bear'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
         if(n.tg&&walkVia(n,n.tg.x-38,n.tg.y+6,125,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,2,false);if(!n.tg.alive){n.carry=4;n.state='ret'}}
-      }else{const room=mk.stock<mk.cap,toW=!room&&built('warehouse')&&store.meat<storeCap,tx=toW?DEPO.x-40:mk.x+70,ty=toW?DEPO.y:mk.y+45;
-        if(walkVia(n,tx,ty,125,dt)<8){if(toW){const k=Math.min(n.carry,storeCap-store.meat);store.meat+=k;n.carry-=k}else if(room){const k=Math.min(n.carry,mk.cap-mk.stock);mk.stock+=k;n.carry-=k}
-          if(n.carry<=0){n.carry=0;n.state='seek';n.tg=null}}}
+      }else if(deliver(n,'meat',mk,mk.x+70,mk.y+45,125,dt)){n.state='seek';n.tg=null}
     }
   }
 
@@ -595,7 +646,7 @@ function update(dt){
       if(g.hp>0){if(dO<26)gateHit=g;else{tx=g.out.x;ty=g.out.y}}
       else if(dO<22||r.thru){r.thru=true;tx=g.inn.x;ty=g.inn.y}else{tx=g.out.x;ty=g.out.y}
     }
-    if(gateHit){if(r.atkT<=0){r.atkT=.8;gateHit.hp-=r.dmg;gateHit.flash=.15;puff(gateHit.out.x,gateHit.out.y-20,4,'#c9935a')}}
+    if(gateHit){if(r.atkT<=0){r.atkT=.8;gateHit.hp-=r.gdmg||r.dmg;gateHit.flash=.15;puff(gateHit.out.x,gateHit.out.y-20,4,'#c9935a')}}
     else{
       const dx=tx-r.x,dy=ty-r.y,l=Math.hypot(dx,dy);
       if(l>(chase?34:4)){const nx=r.x+dx/l*r.sp*dt,ny=r.y+dy/l*r.sp*dt;if(!wallHit(r.x,r.y,nx,ny,g=>g.hp<=0)){r.x=nx;r.y=ny}r.walk+=dt*14;if(Math.abs(dx)>3)r.face=dx>0?1:-1}
@@ -671,8 +722,9 @@ function hitEnemy(e,d,byPlayer){
     e.alive=false;e.rt=cf.resp;puff(e.x,e.y-15,18*cf.size,'#fff');
     if(byPlayer)for(const k in cf.drop)for(let i=0;i<cf.drop[k];i++)dropItem(e.x,e.y,k);
     if(e.type==='polar'&&byPlayer){const b=50+devPct();money+=b;addText(e.x,e.y-90,'+'+b,'#ffd34d');toast('白熊を倒した！ 肉・毛皮・氷晶がたくさん！');sfx('mission')}
-    if(byPlayer&&e.type!=='raider')stat(e.type);
-    if(e.type==='raider'){stat('raider');const g=3+raid.no;money+=g;addText(e.x,e.y-40,'+'+g,'#ffd34d');flyTo(e.x,e.y-20,P.x,P.y-40,'coin')}
+    const isR=e.type==='raider'||e.type==='alpha';
+    if(byPlayer&&!isR)stat(e.type);
+    if(isR){stat('raider');if(e.type==='alpha'){for(const k in cf.drop)for(let i=0;i<cf.drop[k];i++)dropItem(e.x,e.y,k);toast('大狼を倒した！')}const g=Math.round((3+raid.no)*(raid.mult||1)*(e.type==='alpha'?5:1));money+=g;addText(e.x,e.y-40,'+'+g,'#ffd34d');flyTo(e.x,e.y-20,P.x,P.y-40,'coin')}
   }
 }
 const NDROP={rock:['ore',2],crystal:['crystal',2],bigtree:['log',5],tree:['log',3]};
@@ -681,7 +733,7 @@ function hitNode(n,d,byPlayer){
   n.hp-=d;n.wob=.3;puff(n.x,n.y-30,6,n.kind==='crystal'?'#9fe6ff':hard?'#c9d3dd':'#fff');if(byPlayer)sfx(hard?'mine':'chop',.05);
   if(n.hp<=0){killNode(n);if(byPlayer){const[k,c]=NDROP[n.kind];stat(n.kind==='bigtree'?'tree':n.kind==='crystal'?'crystal':n.kind);for(let i=0;i<c;i++)dropItem(n.x,n.y,k)}}
 }
-function killNode(n){n.alive=false;n.rt=n.kind==='rock'?18:n.kind==='crystal'?40:9;puff(n.x,n.y-35,16,n.kind==='crystal'?'#9fe6ff':n.kind==='rock'?'#c9d3dd':'#fff')}
+function killNode(n){n.alive=false;n.rt=n.kind==='rock'?10:n.kind==='crystal'?40:9;puff(n.x,n.y-35,16,n.kind==='crystal'?'#9fe6ff':n.kind==='rock'?'#c9d3dd':'#fff')}
 function walkTo(o,x,y,sp,dt){const dx=x-o.x,dy=y-o.y,l=Math.hypot(dx,dy);if(l>1){const s=Math.min(l,sp*dt);o.x+=dx/l*s;o.y+=dy/l*s;o.walk=(o.walk||0)+dt*11;if(Math.abs(dx)>2)o.face=dx>0?1:-1}return l}
 
 /* ================= drawing primitives ================= */
@@ -758,8 +810,8 @@ function drawEnemy(e){
   if(!e.alive)return;
   const s=ET[e.type].size,x=e.x,y=e.y,f=e.face,fl=e.flash>0;
   ctx.save();ctx.translate(x,y);ctx.scale(s,s);
-  if(e.type==='wolf'||e.type==='raider'){
-    const rd=e.type==='raider',st=Math.sin(e.walk)*3,c=fl?'#fff':rd?'#6e4b4b':'#7d8794',c2=fl?'#fff':rd?'#4a3030':'#5f6873';
+  if(e.type==='wolf'||e.type==='raider'||e.type==='alpha'){
+    const rd=e.type!=='wolf',st=Math.sin(e.walk)*3,c=fl?'#fff':rd?'#6e4b4b':'#7d8794',c2=fl?'#fff':rd?'#4a3030':'#5f6873';
     shadow(0,0,30);
     ctx.fillStyle=c2;ctx.fillRect(-20,-14+st*.4,6,14);ctx.fillRect(12,-14-st*.4,6,14);
     ctx.strokeStyle=c;ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-f*22,-24);ctx.quadraticCurveTo(-f*36,-30,-f*38,-18);ctx.stroke();
@@ -782,7 +834,7 @@ function drawEnemy(e){
     ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx,hy-9);ctx.lineTo(hx+f*7,hy-6);ctx.stroke();
   }
   ctx.restore();
-  if(e.hp<e.max||e.type==='raider')bar(x,y-(e.type==='polar'?108:58),e.type==='polar'?80:40,e.hp/e.max,'#ff5a5a');
+  if(e.hp<e.max||e.type==='raider'||e.type==='alpha')bar(x,y-(e.type==='polar'?108:e.type==='alpha'?84:58),e.type==='polar'||e.type==='alpha'?80:40,e.hp/e.max,'#ff5a5a');
   if(e.type==='polar')txt('白熊',x,y-(e.hp<e.max?122:108),12,'#fff');
 }
 function house(x,y,w,h,wall,roof,label){
@@ -828,6 +880,10 @@ function drawBuilding(p){
       ctx.fillStyle='#2f2f35';ctx.fillRect(x-38,y-12,18,6);ctx.fillRect(x-33,y-6,8,6);break;
     case 'lumber':house(x,y,80,48,'#8a5a2f','#6b3d1d','木こり小屋');break;
     case 'fisher':house(x,y,80,48,'#7a95ad','#2d5d8c','漁師小屋');break;
+    case 'polarhut':house(x,y,84,48,'#dfe9f2','#3a6ea5','白熊ハンター小屋');crystalIcon(x+30,y-62,.9);break;
+    case 'merchant':{shadow(x,y+4,64);ctx.fillStyle='#8a5a2f';ctx.fillRect(x-56,y-74,6,74);ctx.fillRect(x+50,y-74,6,74);ctx.fillStyle='#a8743f';ctx.fillRect(x-60,y-30,120,30);
+      for(let i=0;i<8;i++)poly([x-64+i*16,y-76,x-64+(i+1)*16,y-76,x-64+(i+1)*16,y-60,x-64+i*16,y-60],i%2?'#fff':'#d1882a');
+      ['log','ore','pelt','meat','fish','crystal'].forEach((k,i)=>itemIcon(k,x-45+i*18,y-40,.75));txt('資材商',x,y-92,15,'#fff');break}
     case 'lighthouse':shadow(x,y,30);ctx.fillStyle='#d7e3ee';ctx.fillRect(x-14,y-110,28,110);ctx.fillStyle='#e04646';ctx.fillRect(x-14,y-80,28,14);ctx.fillRect(x-14,y-40,28,14);
       ctx.globalAlpha=.35+Math.sin(t*4)*.2;ell(x,y-122,40,26,'#9fe6ff');ctx.globalAlpha=1;crystalIcon(x,y-124,1.6);txt('氷の灯台',x,y-150,12,'#fff');break;
     case 'hunter':house(x,y,80,48,'#7d6a4f','#3d6b3a','狩人小屋');break;
@@ -844,7 +900,7 @@ function drawBuilding(p){
       ell(x,y-30,18,18,'#4a525b');ell(x,y-30,13,13,'#b8c2cc');ctx.strokeStyle='#4a525b';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-9,y-30);ctx.lineTo(x+9,y-30);ctx.moveTo(x,y-39);ctx.lineTo(x,y-21);ctx.stroke();
       coinIcon(x-30,y-74,7);coinIcon(x+30,y-74,7);
       txt('金庫',x,y-88,14,'#fff');txt(String(vaultN),x,y-108,13,'#ffd34d');break;
-    case 'arch1':case 'arch2':case 'arch3':case 'arch4':{
+    case 'arch1':case 'arch2':case 'arch3':case 'arch4':case 'arch5':case 'arch6':case 'arch7':case 'arch8':{
       shadow(x,y,34);ctx.fillStyle='#6b4527';ctx.fillRect(x-26,y-84,7,84);ctx.fillRect(x+19,y-84,7,84);
       ctx.strokeStyle='#5b3b22';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-22,y);ctx.lineTo(x+22,y-42);ctx.moveTo(x+22,y);ctx.lineTo(x-22,y-42);ctx.moveTo(x-22,y-42);ctx.lineTo(x+22,y-84);ctx.moveTo(x+22,y-42);ctx.lineTo(x-22,y-84);ctx.stroke();
       ctx.fillStyle='#8a5a2f';ctx.fillRect(x-34,y-96,68,12);ctx.fillStyle='#a8743f';for(let i=0;i<6;i++)ctx.fillRect(x-32+i*12,y-112,5,16);
@@ -1015,6 +1071,8 @@ function render2D(){
       for(const z of WDZ){zone(z.x,z.y,72,52,Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);itemIcon(z.type,z.x,z.y-8,1);txt('取出',z.x,z.y+13,10,'#fff')}
     }
     if(built('vault')){zone(VZ.x,VZ.y,96,52,Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);coinIcon(VZ.x-22,VZ.y,9);txt('受け取る',VZ.x+10,VZ.y,12,'#fff')}
+    if(built('warehouse')){zone(DLV.x,DLV.y,68,52,Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26);txt('配送',DLV.x,DLV.y-10,11,'#fff');txt(DLV_NAME[deliv],DLV.x,DLV.y+9,10,'#ffe9b0')}
+    if(built('merchant'))for(const z of BZ){zone(z.x,z.y,72,52,Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);itemIcon(z.type,z.x,z.y-10,.9);coinIcon(z.x-12,z.y+12,5.5);txt(String(BUYP[z.type]),z.x-4,z.y+12,10,'#ffd34d','left')}
   }
   txt('強化広場',870,2075,16,'rgba(255,255,255,.9)','center','rgba(20,60,50,.5)');
   for(const it of items)if(inV(it.x,it.y)){shadow(it.x,it.y,10);itemIcon(it.type,it.x,it.y-6-it.z+Math.sin(t*4+it.x)*1.5,1)}
@@ -1037,7 +1095,7 @@ function render2D(){
   for(const p of PILES)if(pileOn(p))L.push([p.y,()=>drawPile(p)]);
   for(const sg of fenceSegs()){const[x0,y0,x1,y1]=sg,len=Math.hypot(x1-x0,y1-y0),n=Math.floor(len/26);for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n;if(inV(x,y))L.push([y,()=>{ctx.fillStyle='#7a4f2a';ctx.fillRect(x-5,y-34,10,34);poly([x-5,y-34,x+5,y-34,x,y-42],'#7a4f2a');ell(x,y-38,5,3,'#fff')}])}}
   for(const c of customers)if(inV(c.x,c.y))L.push([c.y,()=>person(c.x,c.y,c.col,{moving:true,walk:c.walk,face:c.out?c.shop.side:-c.shop.side,carry:c.carry?1:0,carryType:c.carry})]);
-  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
+  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
   for(const n of npcs)if(inV(n.x,n.y)){const lk=NPCLOOK[n.kind];L.push([n.y,()=>person(n.x,n.y,lk[0],{moving:true,walk:n.walk,face:n.face,tool:lk[1],swing:n.swing,carry:Math.min(n.carry,6),carryType:lk[2]||n.ctype,hood:n.kind==='miner'?'#ffcd3c':undefined})])}
   if(crate&&inV(crate.x,crate.y))L.push([crate.y,()=>{const y=crate.y-crate.fall*400;shadow(crate.x,crate.y,22);if(crate.fall>0){ctx.strokeStyle='rgba(80,80,80,.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(crate.x-16,y-30);ctx.lineTo(crate.x-30,y-80);ctx.moveTo(crate.x+16,y-30);ctx.lineTo(crate.x+30,y-80);ctx.stroke();ctx.fillStyle='#e04646';ctx.beginPath();ctx.ellipse(crate.x,y-82,38,18,0,Math.PI,0);ctx.fill()}else{ctx.globalAlpha=.4+Math.sin(t*6)*.3;ell(crate.x,crate.y,38,14,'#ffd34d');ctx.globalAlpha=1}ctx.fillStyle='#a8743f';ctx.fillRect(crate.x-18,y-30,36,30);ctx.strokeStyle='#6b4527';ctx.lineWidth=3;ctx.strokeRect(crate.x-18,y-30,36,30);ctx.beginPath();ctx.moveTo(crate.x-18,y-30);ctx.lineTo(crate.x+18,y);ctx.stroke()}]);
   L.push([P.y,()=>{person(P.x,P.y,'#f08a24',{moving:P.moving,walk:P.walk,face:P.face,tool:'axe',swing:P.swing,stack:P.stack,hurt:P.hurtT>0,toolCol:lv.axe>=4?'#ffd34d':'#c9d3dd'});if(P.hp<P.maxHp)bar(P.x,P.y-70-P.stack.length*7.5,40,P.hp/P.maxHp,'#5fd36a')}]);
@@ -1097,7 +1155,7 @@ function drawHUD(){
     ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(22,my+39,mw-20,3);ctx.fillStyle='#7ad16a';ctx.fillRect(22,my+39,(mw-20)*pr/m.n,3);
     let rs=null,rc2='#fff';
     if(raid.active){rs=`襲撃中！ 残り ${raiders.filter(r=>r.alive).length}体`;rc2='#ff8080'}
-    else if(raid.t!=null&&raid.t<30){rs=`襲撃まで ${Math.ceil(raid.t)}秒`;rc2='#ffd34d'}
+    else if(raid.t!=null&&raid.t<30){const z=raidSize();rs=`襲撃まで ${Math.ceil(raid.t)}秒（${z.n}体${z.boss?'・大狼×'+z.boss:''}）`;rc2='#ffd34d'}
     if(rs){ctx.font=`900 16px ${FONT}`;const w=ctx.measureText(rs).width+34;panel(W/2-w/2,H-215,w,34);txt(rs,W/2,H-198,16,rc2,'center',null)}
   }
   if(toastT>0){ctx.globalAlpha=Math.min(1,toastT);ctx.font=`800 14px ${FONT}`;const w=Math.min(W-24,ctx.measureText(toastMsg).width+36);panel(W/2-w/2,H-170,w,36);txt(toastMsg,W/2,H-152,14,'#fff','center',null);ctx.globalAlpha=1}
@@ -1337,6 +1395,11 @@ const BUILD={
     mk(GB(2,.3,2),'#8a5a2f',0,3.7,0,o);mk(GK(1.5,1.1,4),'#c54b3c',0,4.6,0,o,{ry:Math.PI/4});mk(GK(.75,.55,4),'#f6fbff',0,4.95,0,o,{ry:Math.PI/4,nocast:true});
     mk(GB(.05,1,.05),'#333333',0,5.6,0,o);mk(GB(.6,.35,.04),'#ffcd3c',.3,5.95,0,o);mk(GC(.22,.26,.5,6),'#3d6b3a',0,4.1,.4,o);mk(GS(.19),'#ffd9b8',0,4.5,.4,o)},
   arch1:(p,o)=>archerM(o,.8),arch2:(p,o)=>archerM(o,.8),arch3:(p,o)=>archerM(o,.8),arch4:(p,o)=>archerM(o,.8),
+  arch5:(p,o)=>archerM(o,.85),arch6:(p,o)=>archerM(o,.85),arch7:(p,o)=>archerM(o,.9),arch8:(p,o)=>archerM(o,.9),
+  polarhut:(p,o)=>{houseM(o,2.1,1.2,1.6,'#dfe9f2','#3a6ea5');mk(new THREE.OctahedronGeometry(.25,0).scale(.8,1.5,.8),ME('#9fe6ff',.6),1.3,.4,.8,o,{nocast:true})},
+  merchant:(p,o)=>{mk(GB(3,.8,1),'#a8743f',0,.4,0,o);mk(GB(3.15,.12,1.2),'#c48e55',0,.86,0,o);for(const a of[-1.4,1.4])mk(GB(.14,2.2,.14),'#7a4f2a',a,1.1,-.38,o);
+    for(let i=0;i<8;i++)mk(GB(.4,.1,1.4),i%2?'#ffffff':'#d1882a',-1.4+i*.4,2.15,0,o,{rx:.32});
+    ['log','ore','pelt','meat','fish','crystal'].forEach((k,i)=>{const m=new THREE.Mesh(itemGeo(k),itemMat(k));m.position.set(-1.1+i*.44,1.02,.1);m.castShadow=true;o.add(m)})},
   fisher:(p,o)=>{houseM(o,2,1.2,1.6,'#7a95ad','#2d5d8c');mk(GB(.06,1.2,.06),'#7a4f28',1.2,.6,.6,o,{rz:-.5})},
   lighthouse:(p,o)=>{mk(GC(.55,.7,3.2,10),'#d7e3ee',0,1.6,0,o);for(const y of[1,2.2])mk(GC(.62,.66,.35,10),'#e04646',0,y,0,o);mk(GC(.75,.75,.2,10),'#8e9aa6',0,3.3,0,o);
     mk(new THREE.OctahedronGeometry(.45,0).scale(.8,1.4,.8),ME('#9fe6ff',.9),0,3.95,0,o,{nocast:true});const L=new THREE.PointLight('#9fe6ff',1.2,10,2);L.position.set(0,4,0);o.add(L)},
@@ -1419,7 +1482,7 @@ function placeAnimal(m,e,isWolf){
   const s=ET[e.type].size;m.g.scale.setScalar(s);m.g.position.set(e.x/U,0,e.y/U);m.g.rotation.y=heading(e,e.face);
   const w=e.walk||0;m.legs.forEach((l,i)=>l.rotation.x=Math.sin(w+(i%2?Math.PI:0)+(i>1?Math.PI:0))*.5);
   if(m.type!==e.type){m.type=e.type;
-    if(isWolf){const rd=e.type==='raider';m.bm.color.set(rd?'#6e4b4b':'#7d8794');m.dm.color.set(rd?'#4a3030':'#5f6873');m.eyeM.color.set(rd?'#ff3030':'#ffdd55');m.eyeM.emissive.set(rd?'#ff3030':'#ffdd55')}
+    if(isWolf){const rd=e.type!=='wolf';m.bm.color.set(e.type==='alpha'?'#4a2a2a':rd?'#6e4b4b':'#7d8794');m.dm.color.set(rd?'#4a3030':'#5f6873');m.eyeM.color.set(rd?'#ff3030':'#ffdd55');m.eyeM.emissive.set(rd?'#ff3030':'#ffdd55')}
     else{const pl=e.type==='polar';m.bm.color.set(pl?'#f2f6fa':'#7a5236');m.dm.color.set(pl?'#d3dde6':'#5e3e28');m.sm.color.set(pl?'#e4ecf2':'#c8a27a')}}
   m.bm.emissive.set(e.flash>0?'#ffffff':'#000000');m.bm.emissiveIntensity=e.flash>0?.6:0;
   if(m.tail)m.tail.rotation.y=Math.sin(t*8)*.3;
@@ -1460,6 +1523,8 @@ function render3D(){
   zon('depo',DEPO.x,DEPO.y,96,52,built('warehouse'),Math.hypot(P.x-DEPO.x,P.y-DEPO.y)<50);
   WDZ.forEach((z,i)=>zon('w'+i,z.x,z.y,72,52,built('warehouse'),Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26));
   zon('vault',VZ.x,VZ.y,96,52,built('vault'),Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);
+  zon('dlv',DLV.x,DLV.y,68,52,built('warehouse'),Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26);
+  BZ.forEach((z,i)=>zon('b'+i,z.x,z.y,72,52,built('merchant'),Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26));
   // shops & stock
   SHOPS.forEach((s,i)=>{const sh=g.shops[i];if(!sh)return;sh.o.visible=shopOpen(s);if(!sh.o.visible)return;
     const arr=[];for(const k of shopTypes(s))for(let j=0;j<Math.min(shopN(s,k),5);j++)arr.push(k);const n=arr.length;
@@ -1478,13 +1543,13 @@ function render3D(){
   // humans
   let hi=0;const human=(o,opt)=>placeHuman(pool('human',hi++,makeHuman),o,opt);
   human(P,{col:'#f08a24',moving:P.moving,tool:'axe',swing:P.swing,stack:P.stack,hurt:P.hurtT>0,gold:lv.axe>=4});
-  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
+  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
   for(const n of npcs){const lk=NPCLOOK[n.kind],arr=[];for(let j=0;j<Math.min(n.carry,8);j++)arr.push(lk[2]||n.ctype);human(n,{col:lk[0],moving:true,tool:lk[1],swing:n.swing,stack:arr,hood:n.kind==='miner'?'#ffcd3c':null})}
   for(const c of customers){if(c.y>WH+20)continue;human(c,{col:c.col,moving:true,stack:c.carry?[c.carry]:[]})}
   poolEnd('human',hi);
   // animals
   let bi=0,wi=0;
-  for(const e of enemies.concat(raiders)){if(!e.alive)continue;if(e.type==='wolf'||e.type==='raider')placeAnimal(pool('wolf',wi++,makeWolf),e,true);else placeAnimal(pool('bear',bi++,makeBear),e,false)}
+  for(const e of enemies.concat(raiders)){if(!e.alive)continue;if(e.type==='wolf'||e.type==='raider'||e.type==='alpha')placeAnimal(pool('wolf',wi++,makeWolf),e,true);else placeAnimal(pool('bear',bi++,makeBear),e,false)}
   poolEnd('bear',bi);poolEnd('wolf',wi);
   if(dog){const m=pool('dog',0,makeDog);m.g.position.set(dog.x/U,0,dog.y/U);m.g.rotation.y=heading(dog,dog.face);const mv=Math.hypot(dog.x-(dog._lx||dog.x),dog.y-(dog._ly||dog.y))>.5;dog._lx=dog.x;dog._ly=dog.y;
     m.legs.forEach((l,i)=>l.rotation.x=mv?Math.sin(t*16+(i%2?Math.PI:0))*.6:0);m.tail.rotation.y=Math.sin(t*14)*.5;stackSet(m.stack,dog.carry,m.list)}
@@ -1525,18 +1590,20 @@ function drawOverlay3D(){
   for(const s of SHOPS)if(shopOpen(s))zl(s.drop.x,s.drop.y,c=>{if(s.ing){itemIcon('meat',c.x-36,c.y-7,.75);itemIcon('fish',c.x-16,c.y-7,.75);itemIcon('log',c.x+4,c.y-7,.65);txt('材料',c.x+30,c.y-7,11,'#fff');txt('肉か魚2＋薪1→1皿',c.x,c.y+12,10,'#ffe9b0')}else{const ty=shopTypes(s);ty.forEach((k,i)=>itemIcon(k,c.x-24-(ty.length-1-i)*20,c.y,.95));txt('売る',c.x+14,c.y,13,'#fff')}});
   if(built('warehouse')){zl(DEPO.x,DEPO.y,c=>txt('預ける',c.x,c.y,13,'#fff'));for(const z of WDZ)zl(z.x,z.y,c=>{itemIcon(z.type,c.x,c.y-8,.9);txt('取出',c.x,c.y+11,10,'#fff')})}
   if(built('vault'))zl(VZ.x,VZ.y,c=>{coinIcon(c.x-26,c.y,8);txt('受け取る',c.x+8,c.y,12,'#fff')});
+  if(built('warehouse'))zl(DLV.x,DLV.y,c=>{txt('配送',c.x,c.y-9,11,'#fff');txt(DLV_NAME[deliv],c.x,c.y+9,10,'#ffe9b0')});
+  if(built('merchant'))for(const z of BZ)zl(z.x,z.y,c=>{itemIcon(z.type,c.x,c.y-10,.9);ctx.font=`900 10px ${FONT}`;const tw=ctx.measureText(String(BUYP[z.type])).width,x0=c.x-(14+tw)/2;coinIcon(x0+5,c.y+11,5.5);txt(String(BUYP[z.type]),x0+13,c.y+11,10,'#ffd34d','left')});
   // shop / building labels
   for(const s of SHOPS){if(!shopOpen(s))continue;const c=w2s(s.x,s.y,s.ing?150:120);if(!on(c))continue;
     txt(s.name,c.x,c.y-14,14,'#fff');txt(shopLine(s),c.x,c.y+4,11,'#fff');if(s.ing)txt(`材料　肉 ${s.ing.meat}　魚 ${s.ing.fish}　薪 ${s.ing.log}${npcs.some(n=>n.state==='retk')?'（補給中）':''}`,c.x,c.y+20,11,'#ffe9b0')}
   if(built('warehouse')){const c=w2s(1000,1800,120);if(on(c)){txt('倉庫',c.x,c.y-14,14,'#fff');ctx.font=`900 11px ${FONT}`;let x=c.x-STORE_T.length*44/2;for(const k of STORE_T){itemIcon(k,x+9,c.y+6,.8);txt(String(store[k]),x+21,c.y+6,11,store[k]>=storeCap?'#ff8a8a':'#fff','left');x+=44}}}
   if(built('vault')){const c=w2s(1400,1800,100);if(on(c)){txt('金庫',c.x,c.y-12,14,'#fff');txt(String(vaultN),c.x,c.y+6,13,'#ffd34d')}}
-  for(const id of['fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
+  for(const id of['polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
   if(lv.statue){const c=w2s(1200,1555,120);if(on(c))txt('英雄の像 Lv'+lv.statue,c.x,c.y,11,'#fff')}
   // piles
   for(const p of PILES){if(!pileOn(p)||pileN[p.id]<=0)continue;const c=w2s(p.x,p.y,p.type==='coin'?40:60);if(!on(c))continue;
     if(p.type==='coin')txt(String(pileN[p.id]),c.x,c.y,12,'#ffd34d');else txt(RES_NAME[p.type]+' '+pileN[p.id],c.x,c.y,12,'#fff')}
   // hp bars
-  for(const e of enemies.concat(raiders)){if(!e.alive)continue;const s=ET[e.type].size;if(e.hp<e.max||e.type==='raider'){const c=w2s(e.x,e.y,70*s);if(on(c))bar(c.x,c.y,e.type==='polar'?70:40,e.hp/e.max,'#ff5a5a')}
+  for(const e of enemies.concat(raiders)){if(!e.alive)continue;const s=ET[e.type].size;if(e.hp<e.max||e.type==='raider'||e.type==='alpha'){const c=w2s(e.x,e.y,70*s);if(on(c))bar(c.x,c.y,e.type==='polar'||e.type==='alpha'?70:40,e.hp/e.max,'#ff5a5a')}
     if(e.type==='polar'){const c=w2s(e.x,e.y,70*s+18);if(on(c))txt('白熊',c.x,c.y-6,12,'#fff')}}
   for(const n of nodes)if(n.alive&&n.hp<n.max){const c=w2s(n.x,n.y,n.kind==='rock'?55:n.kind==='bigtree'?140:105);if(on(c))bar(c.x,c.y,34,n.hp/n.max,n.kind==='rock'?'#5fc3ff':'#7ad16a')}
   if(built('wall'))for(const gt of GATES)if(raid.active||gt.hp<gt.max){const c=w2s(gt.x,gt.y,110);if(on(c))bar(c.x,c.y,60,Math.max(0,gt.hp)/gt.max,'#ffb45f')}
