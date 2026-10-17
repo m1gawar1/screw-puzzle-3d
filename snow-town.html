@@ -56,15 +56,15 @@ addEventListener('resize',resize);resize();
 if(!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
 
 /* ================= world layout ================= */
-const WW=2400,WH=2700;
+const WW=2400,WH=2830;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const R=(a,b)=>a+Math.random()*(b-a);
 let seed=11;const rand=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646};
 const ZONE={
   A:{x0:80,x1:2320,y0:690,y1:1110,name:'森'},
-  B:{x0:70,x1:640,y0:1200,y1:2650,name:'鉱山'},
-  C:{x0:1770,x1:2330,y0:1200,y1:2650,name:'氷原'},
+  B:{x0:70,x1:640,y0:1200,y1:2780,name:'鉱山'},
+  C:{x0:1770,x1:2330,y0:1200,y1:2780,name:'氷原'},
   D:{x0:80,x1:2320,y0:80,y1:590,name:'白熊の巣'},
 };
 const RES=['log','ore','pelt','meat','fish','crystal'];
@@ -115,24 +115,27 @@ const PADS=[
  {id:'arch4',name:'矢倉',x:1710,y:1430,cost:one({log:50,coin:150}),req:['wall','arch2'],desc:'襲撃者を矢で自動攻撃'},
  // repeatable upgrades (強化広場)
  {id:'axe',name:'斧',x:750,y:2140,max:7,cost:l=>({coin:Math.round(30*Math.pow(1.9,l)),ore:l>=2?5*l:0}),req:['grill'],up:true},
- {id:'bag',name:'カゴ',x:930,y:2140,max:8,cost:l=>({coin:Math.round(20*Math.pow(1.7,l))}),req:['furnace'],up:true},
+ {id:'bag',name:'カゴ',x:930,y:2140,max:12,cost:l=>({coin:Math.round(20*Math.pow(1.7,l)),pelt:l>=6?8*(l-5):0}),req:['furnace'],up:true},
  {id:'boots',name:'ブーツ',x:1110,y:2140,max:5,cost:l=>({coin:Math.round(40*Math.pow(1.8,l))}),req:['house1'],up:true},
- {id:'coat',name:'防寒着',x:1290,y:2140,max:5,cost:l=>({coin:Math.round(50*Math.pow(1.8,l)),pelt:l>=1?2*l:0}),req:['smithy'],up:true},
+ {id:'coat',name:'防寒着',x:1290,y:2140,max:10,cost:l=>({coin:Math.round(50*Math.pow(1.7,l)),pelt:l>=5?6*l:l>=1?2*l:0}),req:['smithy'],up:true},
  {id:'sign',name:'看板(値上げ)',x:1470,y:2140,max:6,cost:l=>({coin:Math.round(60*Math.pow(2,l))}),req:['grill'],up:true},
- {id:'whup',name:'倉庫を拡張',x:1650,y:2140,max:4,cost:l=>({coin:Math.round(80*Math.pow(1.8,l)),log:20*(l+1)}),req:['warehouse'],up:true},
- {id:'hireL',name:'木こりを雇う',x:750,y:2260,max:6,cost:l=>({coin:Math.round(80*Math.pow(1.5,l))}),req:['lumber'],up:true},
+ {id:'whup',name:'倉庫を拡張',x:1650,y:2140,max:8,cost:l=>({coin:Math.round(80*Math.pow(1.7,l)),log:20*(l+1),pelt:l>=4?5*l:0}),req:['warehouse'],up:true},
+ {id:'hireL',name:'木こりを雇う',x:750,y:2260,max:10,cost:l=>({coin:Math.round(80*Math.pow(1.4,l))}),req:['lumber'],up:true},
  {id:'hireH',name:'狩人を雇う',x:930,y:2260,max:6,cost:l=>({coin:Math.round(100*Math.pow(1.5,l))}),req:['hunter'],up:true},
  {id:'hireM',name:'鉱夫を雇う',x:1110,y:2260,max:6,cost:l=>({coin:Math.round(120*Math.pow(1.7,l))}),req:['minehut'],up:true},
  {id:'hireT',name:'罠師を雇う',x:1290,y:2260,max:6,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['trapper'],up:true},
  {id:'hireP',name:'運搬係を雇う',x:1470,y:2260,max:2,cost:l=>({coin:Math.round(100*Math.pow(1.7,l))}),req:['warehouse'],up:true},
  {id:'hireC',name:'集金係を雇う',x:1650,y:2260,max:2,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['vault'],up:true},
- {id:'arrow',name:'矢の強化',x:930,y:2380,max:5,cost:l=>({coin:Math.round(100*Math.pow(1.8,l)),ore:10*(l+1)}),req:['arch1','mine'],up:true},
- {id:'gateup',name:'門の強化',x:1110,y:2380,max:4,cost:l=>({log:30*(l+1),ore:10*l,coin:50*(l+1)}),req:['wall'],up:true},
+ {id:'arrow',name:'矢の強化',x:930,y:2380,max:10,cost:l=>({coin:Math.round(100*Math.pow(1.6,l)),ore:10*(l+1),pelt:l>=5?5*(l-4):0,crystal:l>=7?3*(l-6):0}),req:['arch1','mine'],up:true},
+ {id:'gateup',name:'門の強化',x:1110,y:2380,max:10,cost:l=>({log:30*(l+1),ore:10*l,coin:Math.round(50*Math.pow(1.5,l)),pelt:l>=4?6*(l-3):0}),req:['wall'],up:true},
  {id:'dogup',name:'犬の訓練',x:1290,y:2380,max:3,cost:l=>({coin:Math.round(80*Math.pow(1.9,l)),meat:5*(l+1)}),req:['doghouse'],up:true},
  {id:'statue',name:'英雄の像',x:930,y:2500,max:5,cost:l=>({coin:Math.round(1500*Math.pow(2,l)),ore:40*(l+1)}),req:['smithy','peltshop'],up:true},
  {id:'feast',name:'大宴会を開く',x:1110,y:2500,max:999,cost:l=>({coin:2000,meat:10}),req:['kitchen'],up:true},
  {id:'hireF',name:'漁師を雇う',x:1650,y:2380,max:3,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['fisher'],up:true},
  {id:'hireB',name:'白熊ハンターを雇う',x:1650,y:2500,max:3,cost:l=>({coin:Math.round(800*Math.pow(1.7,l)),crystal:5*(l+1)}),req:['polarhut'],up:true},
+ {id:'guardhouse',name:'自警団詰所',x:1650,y:2760,cost:one({coin:500,log:80,pelt:20}),req:['wall'],desc:'自警団が襲撃者と戦う（斧の強化で強くなる）'},
+ {id:'hireG',name:'自警団を増やす',x:750,y:2760,max:6,cost:l=>({coin:Math.round(200*Math.pow(1.5,l)),pelt:5*(l+1)}),req:['guardhouse'],up:true},
+ {id:'guardup',name:'自警団の装備',x:930,y:2760,max:8,cost:l=>({coin:Math.round(300*Math.pow(1.6,l)),pelt:10*(l+1),ore:5*l}),req:['guardhouse'],up:true},
  {id:'iceaxe',name:'氷晶の斧',x:750,y:2380,max:3,cost:l=>({coin:Math.round(4000*Math.pow(2,l)),crystal:10*(l+1)}),req:['trade'],up:true},
  {id:'chef',name:'料理人を雇う',x:1470,y:2380,max:3,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['kitchen'],up:true},
 ];
@@ -170,6 +173,10 @@ const BUYP={log:10,ore:14,pelt:40,meat:18,fish:20,crystal:220};
 const BZ=Object.keys(BUYP).map((type,i)=>({type,x:740+i*95,y:2630}));
 const DLV={x:1105,y:1890};
 const DLV_NAME=['半分ずつ','お店優先','倉庫優先'];
+const SELLZ={x:895,y:1890},SELLP={log:3,ore:4,pelt:10,meat:4,fish:5,crystal:60};
+const wPow=()=>1+Math.floor(lv.axe/2)+lv.iceaxe;
+const fPow=()=>2+lv.axe+2*lv.iceaxe;
+const gPow=()=>Math.round((3+lv.axe+2*lv.iceaxe)*(1+.25*lv.guardup));
 const RENT=[5,6,8,10,12,15];
 for(let i=1;i<=6;i++){const h=PADBY['house'+i];PILES.push({id:'ph'+i,x:h.x+58,y:h.y+42,type:'coin',req:'house'+i,rent:RENT[i-1],rt:0})}
 
@@ -254,7 +261,7 @@ const ET={
 };
 
 /* ================= state ================= */
-let deliv=0,dlvIn=false,buyT=0,feastT=0,stats,mis,misBase,raid,raiders,arrows,dog,store,vaultN,P,money,lv,paid,enemies,items,flyers,parts,texts,customers,npcs,pileN,crate,crateT,t=0,toastT=0,toastMsg='',started=false,won=false,saveT=0;
+let sellT=0,deliv=0,dlvIn=false,buyT=0,feastT=0,stats,mis,misBase,raid,raiders,arrows,dog,store,vaultN,P,money,lv,paid,enemies,items,flyers,parts,texts,customers,npcs,pileN,crate,crateT,t=0,toastT=0,toastMsg='',started=false,won=false,saveT=0;
 let arrowDmg,arrowInt,storeCap,dmg,atkInt,cap,speed,priceMult,meatPrice,peltPrice;
 const built=id=>lv[id]>=1;
 function recompute(){
@@ -262,7 +269,7 @@ function recompute(){
   cap=8+4*lv.bag;speed=215*(1+.08*lv.boots);
   const mh=10+6*lv.coat;if(P){P.hp=Math.min(mh,P.hp+(mh-P.maxHp));P.maxHp=mh}
   storeCap=60+60*lv.whup;arrowDmg=Math.round(2+1.5*lv.arrow);arrowInt=1.1*Math.pow(.88,lv.arrow);
-  for(const g of GATES){g.max=30+25*lv.gateup;if(!raid||!raid.active)g.hp=g.max}
+  for(const g of GATES){g.max=30+35*lv.gateup;if(!raid||!raid.active)g.hp=g.max}
   priceMult=1+.25*lv.sign+.15*lv.statue;meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
 }
 const feastM=()=>feastT>0?1.5:1;
@@ -289,9 +296,9 @@ const shopOpen=s=>!s.req||built(s.req);
 const pileOn=p=>!p.req||built(p.req);
 function syncNPCs(){
   const want={lumber:(built('lumber')?1:0)+lv.hireL,hunter:(built('hunter')?1:0)+lv.hireH,miner:(built('minehut')?1:0)+lv.hireM,
-    trapper:(built('trapper')?1:0)+lv.hireT,polarh:(built('polarhut')?1:0)+lv.hireB,fisher:(built('fisher')?1:0)+lv.hireF,porter:(built('warehouse')?1:0)+lv.hireP,collector:(built('vault')?1:0)+lv.hireC};
+    trapper:(built('trapper')?1:0)+lv.hireT,guard:(built('guardhouse')?2:0)+lv.hireG,polarh:(built('polarhut')?1:0)+lv.hireB,fisher:(built('fisher')?1:0)+lv.hireF,porter:(built('warehouse')?1:0)+lv.hireP,collector:(built('vault')?1:0)+lv.hireC};
   if(built('doghouse')&&!dog)dog={x:PADBY.doghouse.x,y:PADBY.doghouse.y+40,carry:[],tg:null,walk:0,face:1};
-  const HOME={lumber:'lumber',hunter:'hunter',miner:'minehut',trapper:'trapper',polarh:'polarhut',fisher:'fisher',porter:'warehouse',collector:'vault'};
+  const HOME={lumber:'lumber',hunter:'hunter',miner:'minehut',trapper:'trapper',guard:'guardhouse',polarh:'polarhut',fisher:'fisher',porter:'warehouse',collector:'vault'};
   for(const k in want){
     const home=PADBY[HOME[k]];
     while(npcs.filter(n=>n.kind===k).length<want[k])npcs.push({kind:k,x:home.x+R(-20,20),y:home.y+50,state:'seek',tg:null,atkT:0,walk:0,face:1,swing:0,carry:0});
@@ -361,7 +368,7 @@ function levelUp(p){
   if(p.up)addText(p.x,p.y-60,p.name+' Lv'+lv[p.id]+'！','#ffd34d');
   else{addText(p.x,p.y-90,p.fence?'開拓！':p.name+' 完成！','#ffd34d');toast(p.name+'：'+p.desc)}
   if(p.up){
-    const d={axe:`攻撃力 ${dmg}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍'}[p.id]||'';
+    const d={axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍'}[p.id]||'';
     toast(p.name+' Lv'+lv[p.id]+'：'+d);
   }
   if(p.id==='feast'){feastT=120;toast('大宴会！ 2分間、売値と家賃が1.5倍！')}
@@ -404,7 +411,7 @@ function walkVia(o,x,y,sp,dt){
   }
   o.via=false;return walkTo(o,x,y,sp,dt);
 }
-const defense=()=>TOWERS.filter(built).length+.5*lv.arrow+.5*lv.gateup;
+const defense=()=>TOWERS.filter(built).length+.3*lv.arrow+.3*lv.gateup;
 function raidSize(){const d=defense();return{n:Math.min(36,Math.round((3+raid.no*2)*(1+d*.12))),hp:Math.round((5+raid.no*2)*(1+d*.08)),boss:d>=10?2:d>=6?1:0,mult:1+d*.15}}
 function startRaid(){
   raid.active=true;raid.stolen=0;sfx('horn',1);
@@ -544,6 +551,7 @@ function update(dt){
   /* merchant & delivery toggle */
   if(built('merchant')){const z=BZ.find(z=>Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);
     if(z){buyT+=dt;while(buyT>.08){buyT-=.08;const pr=BUYP[z.type];if(money<pr||P.stack.length>=cap){buyT=0;break}money-=pr;P.stack.push(z.type);fly(z.x,z.y-10,z.type);sfx('sell',.1)}}else buyT=0}
+  if(built('warehouse')&&P.stack.length&&Math.abs(P.x-SELLZ.x)<34&&Math.abs(P.y-SELLZ.y)<26){sellT=(sellT||0)+dt;while(sellT>.05&&P.stack.length){sellT-=.05;const k=P.stack.pop();money+=SELLP[k]||1;flyTo(P.x,P.y-50,SELLZ.x,SELLZ.y,k);sfx('sell',.1)}}
   if(built('warehouse')){const inn=Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26;if(inn&&!dlvIn){deliv=(deliv+1)%3;toast('素材の配送先：'+DLV_NAME[deliv]);sfx('up',.2)}dlvIn=inn}
 
   /* pads */
@@ -570,20 +578,24 @@ function update(dt){
       const home=n.kind==='lumber'?PILES.find(p=>p.id==='plog'):PILES.find(p=>p.id==='pore'),want=n.kind==='lumber'?'tree':'rock';
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive){let bd=1e9;n.tg=null;for(const nd of nodes)if(nd.alive&&nd.kind===want&&(want==='rock'||nd.y>ZONE.A.y0)){const d=Math.hypot(nd.x-home.x,nd.y-home.y);if(d<bd&&!npcs.some(o=>o!==n&&o.tg===nd)){bd=d;n.tg=nd}}}
-        if(n.tg&&walkVia(n,n.tg.x-30,n.tg.y+8,115,dt)<6&&n.atkT<=0){n.atkT=.8;n.swing=1;n.face=1;n.tg.hp--;n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,n.kind==='miner'?'#c9d3dd':'#fff');if(n.tg.hp<=0){killNode(n.tg);n.carry=n.kind==='lumber'?3:4;n.state='ret'}}
+        if(n.tg&&walkVia(n,n.tg.x-30,n.tg.y+8,115,dt)<6&&n.atkT<=0){n.atkT=.8*Math.pow(.95,lv.axe);n.swing=1;n.face=1;n.tg.hp-=wPow();n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,n.kind==='miner'?'#c9d3dd':'#fff');if(n.tg.hp<=0){killNode(n.tg);stat(n.kind==='lumber'?'tree':'rock');n.carry=n.kind==='lumber'?3:4;n.state='ret'}}
       }else if(walkVia(n,home.x,home.y-12,115,dt)<6){if(pileN[home.id]<60)pileN[home.id]+=n.carry;n.carry=0;n.state='seek';n.tg=null}
     }else if(n.kind==='trapper'){
       const home=PILES.find(p=>p.id==='ppl');
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='wolf'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
-        if(n.tg&&walkVia(n,n.tg.x-34,n.tg.y+6,135,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,2,false);if(!n.tg.alive){n.carry=3;n.state='ret'}}
+        if(n.tg&&walkVia(n,n.tg.x-34,n.tg.y+6,135,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,fPow(),false);if(!n.tg.alive){stat('wolf');n.carry=3;n.state='ret'}}
       }else{const ps=SHOPS[1];if(deliver(n,'pelt',ps,ps.x-60,ps.y+45,135,dt,home)){n.state='seek';n.tg=null}}
     }else if(n.kind==='fisher'){
       const mk=SHOPS[0];
       if(n.state==='seek'){
         if(!n.tg||npcs.some(o=>o!==n&&o.tg===n.tg)){n.tg=HOLES.filter(h=>!npcs.some(o=>o!==n&&o.tg===h)).sort((a,b)=>Math.hypot(a.x-n.x,a.y-n.y)-Math.hypot(b.x-n.x,b.y-n.y))[0]||HOLES[0]}
-        if(walkVia(n,n.tg.x-34,n.tg.y+6,120,dt)<8){n.face=1;n.fishT=(n.fishT||0)+dt;n.swing=.3;if(n.fishT>1.4){n.fishT=0;if(Math.random()<.85){n.carry++;puff(n.tg.x,n.tg.y-10,6,'#bfe8ff')}if(n.carry>=6)n.state='ret'}}
+        if(walkVia(n,n.tg.x-34,n.tg.y+6,120,dt)<8){n.face=1;n.fishT=(n.fishT||0)+dt;n.swing=.3;if(n.fishT>1.4){n.fishT=0;if(Math.random()<.85){n.carry++;stat('fish');puff(n.tg.x,n.tg.y-10,6,'#bfe8ff')}if(n.carry>=6)n.state='ret'}}
       }else if(deliver(n,'fish',mk,mk.x+70,mk.y+45,130,dt))n.state='seek';
+    }else if(n.kind==='guard'){
+      let tg=null,bd=1e9;for(const r of raiders)if(r.alive){const d=dist(r,n);if(d<bd){bd=d;tg=r}}
+      if(tg){if(bd>40)walkVia(n,tg.x,tg.y,170,dt);else{n.face=tg.x>n.x?1:-1;if(n.atkT<=0){n.atkT=.7*Math.pow(.92,lv.guardup);n.swing=1;hitEnemy(tg,gPow(),false)}}}
+      else{const i=npcs.filter(o=>o.kind==='guard').indexOf(n),g=GATES[i%3],o=Math.floor(i/3)*28-14;walkVia(n,g.inn.x+(g.vert?(g===GATES[1]?30:-30):o),g.inn.y+(g.vert?o:30),120,dt)}
     }else if(n.kind==='polarh'){
       if(n.state==='seek'){
         if(!n.tg||(n.tg.alive===false)||(n.tg.type&&!enemies.includes(n.tg))){n.tg=null;let bd=1e9;
@@ -591,8 +603,8 @@ function update(dt){
           if(!n.tg)for(const nd of nodes)if(nd.alive&&nd.kind==='crystal'&&!npcs.some(o=>o!==n&&o.tg===nd)){const d=Math.hypot(nd.x-n.x,nd.y-n.y);if(d<bd){bd=d;n.tg=nd}}}
         if(n.tg){const isB=!!n.tg.type,r=isB?60:30;
           if(walkVia(n,n.tg.x-r,n.tg.y+6,135,dt)<(isB?14:8)&&n.atkT<=0){n.atkT=isB?.6:.7;n.swing=1;n.face=1;
-            if(isB){hitEnemy(n.tg,6,false);if(!n.tg.alive){n.bag={meat:6,pelt:4,crystal:3};n.state='ret'}}
-            else{n.tg.hp-=2;n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,'#9fe6ff');if(n.tg.hp<=0){killNode(n.tg);n.bag={crystal:2};n.state='ret'}}}}
+            if(isB){hitEnemy(n.tg,6+lv.axe+2*lv.iceaxe,false);if(!n.tg.alive){stat('polar');stat('crystal_got',3);n.bag={meat:6,pelt:4,crystal:3};n.state='ret'}}
+            else{n.tg.hp-=1+wPow();n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,'#9fe6ff');if(n.tg.hp<=0){killNode(n.tg);stat('crystal_got',2);n.bag={crystal:2};n.state='ret'}}}}
         else walkVia(n,PADBY.polarhut.x+40,PADBY.polarhut.y+50,90,dt);
       }else{
         const tx=built('warehouse')?DEPO.x-40:PADBY.polarhut.x,ty=built('warehouse')?DEPO.y:PADBY.polarhut.y+60;
@@ -624,7 +636,7 @@ function update(dt){
       const mk=SHOPS[0];
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='bear'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
-        if(n.tg&&walkVia(n,n.tg.x-38,n.tg.y+6,125,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,2,false);if(!n.tg.alive){n.carry=4;n.state='ret'}}
+        if(n.tg&&walkVia(n,n.tg.x-38,n.tg.y+6,125,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,fPow(),false);if(!n.tg.alive){stat('bear');n.carry=4;n.state='ret'}}
       }else if(deliver(n,'meat',mk,mk.x+70,mk.y+45,125,dt)){n.state='seek';n.tg=null}
     }
   }
@@ -880,6 +892,7 @@ function drawBuilding(p){
       ctx.fillStyle='#2f2f35';ctx.fillRect(x-38,y-12,18,6);ctx.fillRect(x-33,y-6,8,6);break;
     case 'lumber':house(x,y,80,48,'#8a5a2f','#6b3d1d','木こり小屋');break;
     case 'fisher':house(x,y,80,48,'#7a95ad','#2d5d8c','漁師小屋');break;
+    case 'guardhouse':house(x,y,84,50,'#8f6a52','#a33a3a','自警団詰所');ctx.fillStyle='#333';ctx.fillRect(x+34,y-110,2,30);poly([x+36,y-110,x+56,y-104,x+36,y-98],'#a33a3a');break;
     case 'polarhut':house(x,y,84,48,'#dfe9f2','#3a6ea5','白熊ハンター小屋');crystalIcon(x+30,y-62,.9);break;
     case 'merchant':{shadow(x,y+4,64);ctx.fillStyle='#8a5a2f';ctx.fillRect(x-56,y-74,6,74);ctx.fillRect(x+50,y-74,6,74);ctx.fillStyle='#a8743f';ctx.fillRect(x-60,y-30,120,30);
       for(let i=0;i<8;i++)poly([x-64+i*16,y-76,x-64+(i+1)*16,y-76,x-64+(i+1)*16,y-60,x-64+i*16,y-60],i%2?'#fff':'#d1882a');
@@ -1071,6 +1084,7 @@ function render2D(){
       for(const z of WDZ){zone(z.x,z.y,72,52,Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);itemIcon(z.type,z.x,z.y-8,1);txt('取出',z.x,z.y+13,10,'#fff')}
     }
     if(built('vault')){zone(VZ.x,VZ.y,96,52,Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);coinIcon(VZ.x-22,VZ.y,9);txt('受け取る',VZ.x+10,VZ.y,12,'#fff')}
+    if(built('warehouse')){zone(SELLZ.x,SELLZ.y,68,52,Math.abs(P.x-SELLZ.x)<34&&Math.abs(P.y-SELLZ.y)<26);txt('売り払う',SELLZ.x,SELLZ.y-9,11,'#fff');txt('半値',SELLZ.x,SELLZ.y+9,10,'#ffd34d')}
     if(built('warehouse')){zone(DLV.x,DLV.y,68,52,Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26);txt('配送',DLV.x,DLV.y-10,11,'#fff');txt(DLV_NAME[deliv],DLV.x,DLV.y+9,10,'#ffe9b0')}
     if(built('merchant'))for(const z of BZ){zone(z.x,z.y,72,52,Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);itemIcon(z.type,z.x,z.y-10,.9);coinIcon(z.x-12,z.y+12,5.5);txt(String(BUYP[z.type]),z.x-4,z.y+12,10,'#ffd34d','left')}
   }
@@ -1095,7 +1109,7 @@ function render2D(){
   for(const p of PILES)if(pileOn(p))L.push([p.y,()=>drawPile(p)]);
   for(const sg of fenceSegs()){const[x0,y0,x1,y1]=sg,len=Math.hypot(x1-x0,y1-y0),n=Math.floor(len/26);for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n;if(inV(x,y))L.push([y,()=>{ctx.fillStyle='#7a4f2a';ctx.fillRect(x-5,y-34,10,34);poly([x-5,y-34,x+5,y-34,x,y-42],'#7a4f2a');ell(x,y-38,5,3,'#fff')}])}}
   for(const c of customers)if(inV(c.x,c.y))L.push([c.y,()=>person(c.x,c.y,c.col,{moving:true,walk:c.walk,face:c.out?c.shop.side:-c.shop.side,carry:c.carry?1:0,carryType:c.carry})]);
-  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
+  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],guard:['#a33a3a','spear',null],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
   for(const n of npcs)if(inV(n.x,n.y)){const lk=NPCLOOK[n.kind];L.push([n.y,()=>person(n.x,n.y,lk[0],{moving:true,walk:n.walk,face:n.face,tool:lk[1],swing:n.swing,carry:Math.min(n.carry,6),carryType:lk[2]||n.ctype,hood:n.kind==='miner'?'#ffcd3c':undefined})])}
   if(crate&&inV(crate.x,crate.y))L.push([crate.y,()=>{const y=crate.y-crate.fall*400;shadow(crate.x,crate.y,22);if(crate.fall>0){ctx.strokeStyle='rgba(80,80,80,.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(crate.x-16,y-30);ctx.lineTo(crate.x-30,y-80);ctx.moveTo(crate.x+16,y-30);ctx.lineTo(crate.x+30,y-80);ctx.stroke();ctx.fillStyle='#e04646';ctx.beginPath();ctx.ellipse(crate.x,y-82,38,18,0,Math.PI,0);ctx.fill()}else{ctx.globalAlpha=.4+Math.sin(t*6)*.3;ell(crate.x,crate.y,38,14,'#ffd34d');ctx.globalAlpha=1}ctx.fillStyle='#a8743f';ctx.fillRect(crate.x-18,y-30,36,30);ctx.strokeStyle='#6b4527';ctx.lineWidth=3;ctx.strokeRect(crate.x-18,y-30,36,30);ctx.beginPath();ctx.moveTo(crate.x-18,y-30);ctx.lineTo(crate.x+18,y);ctx.stroke()}]);
   L.push([P.y,()=>{person(P.x,P.y,'#f08a24',{moving:P.moving,walk:P.walk,face:P.face,tool:'axe',swing:P.swing,stack:P.stack,hurt:P.hurtT>0,toolCol:lv.axe>=4?'#ffd34d':'#c9d3dd'});if(P.hp<P.maxHp)bar(P.x,P.y-70-P.stack.length*7.5,40,P.hp/P.maxHp,'#5fd36a')}]);
@@ -1395,6 +1409,7 @@ const BUILD={
     mk(GB(2,.3,2),'#8a5a2f',0,3.7,0,o);mk(GK(1.5,1.1,4),'#c54b3c',0,4.6,0,o,{ry:Math.PI/4});mk(GK(.75,.55,4),'#f6fbff',0,4.95,0,o,{ry:Math.PI/4,nocast:true});
     mk(GB(.05,1,.05),'#333333',0,5.6,0,o);mk(GB(.6,.35,.04),'#ffcd3c',.3,5.95,0,o);mk(GC(.22,.26,.5,6),'#3d6b3a',0,4.1,.4,o);mk(GS(.19),'#ffd9b8',0,4.5,.4,o)},
   arch1:(p,o)=>archerM(o,.8),arch2:(p,o)=>archerM(o,.8),arch3:(p,o)=>archerM(o,.8),arch4:(p,o)=>archerM(o,.8),
+  guardhouse:(p,o)=>{houseM(o,2.1,1.25,1.6,'#8f6a52','#a33a3a');mk(GB(.05,1.1,.05),'#333333',.9,2.3,0,o);mk(GB(.55,.32,.04),'#a33a3a',1.18,2.65,0,o)},
   arch5:(p,o)=>archerM(o,.85),arch6:(p,o)=>archerM(o,.85),arch7:(p,o)=>archerM(o,.9),arch8:(p,o)=>archerM(o,.9),
   polarhut:(p,o)=>{houseM(o,2.1,1.2,1.6,'#dfe9f2','#3a6ea5');mk(new THREE.OctahedronGeometry(.25,0).scale(.8,1.5,.8),ME('#9fe6ff',.6),1.3,.4,.8,o,{nocast:true})},
   merchant:(p,o)=>{mk(GB(3,.8,1),'#a8743f',0,.4,0,o);mk(GB(3.15,.12,1.2),'#c48e55',0,.86,0,o);for(const a of[-1.4,1.4])mk(GB(.14,2.2,.14),'#7a4f2a',a,1.1,-.38,o);
@@ -1523,6 +1538,7 @@ function render3D(){
   zon('depo',DEPO.x,DEPO.y,96,52,built('warehouse'),Math.hypot(P.x-DEPO.x,P.y-DEPO.y)<50);
   WDZ.forEach((z,i)=>zon('w'+i,z.x,z.y,72,52,built('warehouse'),Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26));
   zon('vault',VZ.x,VZ.y,96,52,built('vault'),Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);
+  zon('sellz',SELLZ.x,SELLZ.y,68,52,built('warehouse'),Math.abs(P.x-SELLZ.x)<34&&Math.abs(P.y-SELLZ.y)<26);
   zon('dlv',DLV.x,DLV.y,68,52,built('warehouse'),Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26);
   BZ.forEach((z,i)=>zon('b'+i,z.x,z.y,72,52,built('merchant'),Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26));
   // shops & stock
@@ -1543,7 +1559,7 @@ function render3D(){
   // humans
   let hi=0;const human=(o,opt)=>placeHuman(pool('human',hi++,makeHuman),o,opt);
   human(P,{col:'#f08a24',moving:P.moving,tool:'axe',swing:P.swing,stack:P.stack,hurt:P.hurtT>0,gold:lv.axe>=4});
-  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
+  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],guard:['#a33a3a','spear',null],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
   for(const n of npcs){const lk=NPCLOOK[n.kind],arr=[];for(let j=0;j<Math.min(n.carry,8);j++)arr.push(lk[2]||n.ctype);human(n,{col:lk[0],moving:true,tool:lk[1],swing:n.swing,stack:arr,hood:n.kind==='miner'?'#ffcd3c':null})}
   for(const c of customers){if(c.y>WH+20)continue;human(c,{col:c.col,moving:true,stack:c.carry?[c.carry]:[]})}
   poolEnd('human',hi);
@@ -1590,6 +1606,7 @@ function drawOverlay3D(){
   for(const s of SHOPS)if(shopOpen(s))zl(s.drop.x,s.drop.y,c=>{if(s.ing){itemIcon('meat',c.x-36,c.y-7,.75);itemIcon('fish',c.x-16,c.y-7,.75);itemIcon('log',c.x+4,c.y-7,.65);txt('材料',c.x+30,c.y-7,11,'#fff');txt('肉か魚2＋薪1→1皿',c.x,c.y+12,10,'#ffe9b0')}else{const ty=shopTypes(s);ty.forEach((k,i)=>itemIcon(k,c.x-24-(ty.length-1-i)*20,c.y,.95));txt('売る',c.x+14,c.y,13,'#fff')}});
   if(built('warehouse')){zl(DEPO.x,DEPO.y,c=>txt('預ける',c.x,c.y,13,'#fff'));for(const z of WDZ)zl(z.x,z.y,c=>{itemIcon(z.type,c.x,c.y-8,.9);txt('取出',c.x,c.y+11,10,'#fff')})}
   if(built('vault'))zl(VZ.x,VZ.y,c=>{coinIcon(c.x-26,c.y,8);txt('受け取る',c.x+8,c.y,12,'#fff')});
+  if(built('warehouse'))zl(SELLZ.x,SELLZ.y,c=>{txt('売り払う',c.x,c.y-9,11,'#fff');txt('半値',c.x,c.y+9,10,'#ffd34d')});
   if(built('warehouse'))zl(DLV.x,DLV.y,c=>{txt('配送',c.x,c.y-9,11,'#fff');txt(DLV_NAME[deliv],c.x,c.y+9,10,'#ffe9b0')});
   if(built('merchant'))for(const z of BZ)zl(z.x,z.y,c=>{itemIcon(z.type,c.x,c.y-10,.9);ctx.font=`900 10px ${FONT}`;const tw=ctx.measureText(String(BUYP[z.type])).width,x0=c.x-(14+tw)/2;coinIcon(x0+5,c.y+11,5.5);txt(String(BUYP[z.type]),x0+13,c.y+11,10,'#ffd34d','left')});
   // shop / building labels
@@ -1597,7 +1614,7 @@ function drawOverlay3D(){
     txt(s.name,c.x,c.y-14,14,'#fff');txt(shopLine(s),c.x,c.y+4,11,'#fff');if(s.ing)txt(`材料　肉 ${s.ing.meat}　魚 ${s.ing.fish}　薪 ${s.ing.log}${npcs.some(n=>n.state==='retk')?'（補給中）':''}`,c.x,c.y+20,11,'#ffe9b0')}
   if(built('warehouse')){const c=w2s(1000,1800,120);if(on(c)){txt('倉庫',c.x,c.y-14,14,'#fff');ctx.font=`900 11px ${FONT}`;let x=c.x-STORE_T.length*44/2;for(const k of STORE_T){itemIcon(k,x+9,c.y+6,.8);txt(String(store[k]),x+21,c.y+6,11,store[k]>=storeCap?'#ff8a8a':'#fff','left');x+=44}}}
   if(built('vault')){const c=w2s(1400,1800,100);if(on(c)){txt('金庫',c.x,c.y-12,14,'#fff');txt(String(vaultN),c.x,c.y+6,13,'#ffd34d')}}
-  for(const id of['polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
+  for(const id of['guardhouse','polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
   if(lv.statue){const c=w2s(1200,1555,120);if(on(c))txt('英雄の像 Lv'+lv.statue,c.x,c.y,11,'#fff')}
   // piles
   for(const p of PILES){if(!pileOn(p)||pileN[p.id]<=0)continue;const c=w2s(p.x,p.y,p.type==='coin'?40:60);if(!on(c))continue;
