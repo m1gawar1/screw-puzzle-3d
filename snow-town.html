@@ -139,6 +139,9 @@ const PADS=[
  {id:'trade',name:'交易所',x:1500,y:2000,cost:one({log:60,ore:40}),req:['polar'],desc:'氷晶とあまった石を買い取ってくれる'},
  {id:'lighthouse',name:'氷の灯台',x:750,y:2630,cat:'sp',cost:one({crystal:20,coin:3000}),req:['trade'],desc:'クマと白熊がすぐ戻り、補給物資が豪華になる'},
  {id:'polarhut',name:'白熊ハンター小屋',x:1300,y:1050,cost:one({coin:600,log:60,ore:30}),req:['polar'],desc:'白熊ハンターが氷晶と白熊の素材を倉庫に集める'},
+ {id:'tools',name:'働き手の道具',x:1470,y:2630,cat:'sp',max:10,cost:l=>({coin:Math.round(1500*Math.pow(1.8,l)),ore:20*(l+1)}),req:['warehouse','smithy'],up:true},
+ {id:'rank',name:'町の格上げ',x:1650,y:2630,cat:'sp',max:10,cost:l=>({coin:Math.round(8000*Math.pow(1.9,l)),log:100*(l+1)}),req:['bigfurnace'],up:true},
+ {id:'donate',name:'王国へ献上',x:1650,y:2760,cat:'sp',max:99999,cost:l=>({coin:Math.round(10000*Math.pow(1.06,l))}),req:['bigfurnace'],up:true},
  {id:'merchant',name:'資材商',x:1450,y:2760,cost:one({coin:300,log:40}),req:['warehouse'],desc:'お金で素材を買えるようになった'},
  {id:'arch5',name:'矢倉',x:820,y:1160,cost:one({log:60,ore:30,coin:300}),req:['arch3'],desc:'襲撃者を矢で自動攻撃（守りが固いほど襲撃も強くなる）'},
  {id:'arch6',name:'矢倉',x:1600,y:1160,cost:one({log:60,ore:30,coin:300}),req:['arch4'],desc:'襲撃者を矢で自動攻撃（守りが固いほど襲撃も強くなる）'},
@@ -159,7 +162,7 @@ const PADS=[
  {id:'hireH',name:'狩人を雇う',x:930,y:2260,cat:'hire',max:6,cost:l=>({coin:Math.round(100*Math.pow(1.5,l))}),req:['hunter'],up:true},
  {id:'hireM',name:'鉱夫を雇う',x:1110,y:2260,cat:'hire',max:6,cost:l=>({coin:Math.round(120*Math.pow(1.7,l))}),req:['minehut'],up:true},
  {id:'hireT',name:'罠師を雇う',x:1290,y:2260,cat:'hire',max:6,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['trapper'],up:true},
- {id:'hireP',name:'運搬係を雇う',x:750,y:2380,cat:'town',max:2,cost:l=>({coin:Math.round(100*Math.pow(1.7,l))}),req:['warehouse'],up:true},
+ {id:'hireP',name:'運搬係を雇う',x:750,y:2380,cat:'town',max:5,cost:l=>({coin:Math.round(100*Math.pow(1.7,l))}),req:['warehouse'],up:true},
  {id:'hireC',name:'集金係を雇う',x:930,y:2380,cat:'town',max:2,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['vault'],up:true},
  {id:'arrow',name:'矢の強化',x:750,y:2500,cat:'def',max:10,cost:l=>({coin:Math.round(100*Math.pow(1.6,l)),ore:10*(l+1),pelt:l>=5?5*(l-4):0,crystal:l>=7?3*(l-6):0}),req:['arch1','mine'],up:true},
  {id:'gateup',name:'門の強化',x:930,y:2500,cat:'def',max:10,cost:l=>({log:30*(l+1),ore:10*l,coin:Math.round(50*Math.pow(1.5,l)),pelt:l>=4?6*(l-3):0}),req:['wall'],up:true},
@@ -178,7 +181,8 @@ for(const p of PADS)p.max=p.max||1;
 const CATC={self:['rgba(60,170,120,.28)','#3caa78'],hire:['rgba(60,160,220,.28)','#3ca0dc'],town:['rgba(190,140,60,.3)','#be8c3c'],def:['rgba(210,70,70,.28)','#d24646'],sp:['rgba(150,90,200,.3)','#965ac8']};
 const ROWS=[[2140,'自分の強化'],[2260,'働き手を雇う'],[2380,'町の運営'],[2500,'防衛'],[2630,'特別な建物'],[2760,'資材商']];
 const PADBY={};for(const p of PADS)PADBY[p.id]=p;
-const TOTAL_LV=PADS.reduce((s,p)=>s+(p.id==='feast'?0:p.max),0);
+const NODEV=['feast','donate'];
+const TOTAL_LV=PADS.reduce((s,p)=>s+(NODEV.includes(p.id)?0:p.max),0);
 
 const SHOPS=[
  {id:'market',name:'市場',type:'meat',x:1000,y:1530,side:-1,req:null,stock:0,cap:60,buyT:0,awn:'#e04646',pile:'pmk',extra:{type:'fish',n:0,cap:60}},
@@ -274,6 +278,9 @@ const MISSIONS=[
  {txt:'交易所で1000コイン稼ぐ',k:'trade_coin',n:1000,r:800},
  {txt:'英雄の像を建てる',k:'statueb',n:1,r:800,abs:true},
  {txt:'温泉を建てる',k:'springb',n:1,r:1500,abs:true},
+ {txt:'働き手の道具を3段階にする',k:'toolsb',n:3,r:3000,abs:true},
+ {txt:'町の格上げをする',k:'rankb',n:1,r:5000,abs:true},
+ {txt:'王国へ献上して勲章をもらう',k:'donateb',n:1,r:3000,abs:true},
  {txt:'雪の城を建てる',k:'castleb',n:1,r:5000,abs:true},
 ];
 const MTPL=[['tree','木を%本切る',2],['bear','クマを%頭倒す',8],['sold_meat','肉を%個売る',3],['wolf','狼を%匹倒す',6],['rock','岩を%個掘る',4],['raider','襲撃者を%体倒す',8],['sold_stew','シチューを%皿売る',10]];
@@ -284,7 +291,7 @@ function curMission(){
 }
 function absStat(k){
   if(k==='houses')return[1,2,3,4,5,6].filter(i=>built('house'+i)).length;
-  if(k==='statueb')return lv.statue;if(k==='springb')return lv.hotspring;if(k==='castleb')return lv.castle;if(k==='wallb')return lv.wall;if(k==='dogb')return lv.doghouse;if(k==='kitb')return lv.kitchen;
+  if(k==='toolsb')return lv.tools;if(k==='rankb')return lv.rank;if(k==='donateb')return lv.donate;if(k==='statueb')return lv.statue;if(k==='springb')return lv.hotspring;if(k==='castleb')return lv.castle;if(k==='wallb')return lv.wall;if(k==='dogb')return lv.doghouse;if(k==='kitb')return lv.kitchen;
   if(k==='archb')return['arch1','arch2','arch3','arch4','arch5','arch6','arch7','arch8'].filter(built).length;
   return 0;
 }
@@ -307,7 +314,7 @@ function recompute(){
   const mh=10+6*lv.coat;if(P){P.hp=Math.min(mh,P.hp+(mh-P.maxHp));P.maxHp=mh}
   storeCap=60+60*lv.whup;arrowDmg=Math.round(2+1.5*lv.arrow);arrowInt=1.1*Math.pow(.88,lv.arrow);
   for(const g of GATES){g.max=30+35*lv.gateup;if(!raid||!raid.active)g.hp=g.max}
-  priceMult=1+.25*lv.sign+.15*lv.statue;meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
+  priceMult=(1+.25*lv.sign+.15*lv.statue)*(1+.1*lv.rank);meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
 }
 const feastM=()=>feastT>0?1.5:1;
 const BASEP={fish:12,crystal:120,ore:4};
@@ -398,7 +405,8 @@ function fly(x0,y0,type){flyers.push({x0,y0,type,k:0})}
 function flyTo(x0,y0,x1,y1,type){flyers.push({x0,y0,x1,y1,type,k:0,abs:true})}
 function locked(x,y){return(!built('mine')&&x<680&&y>1150)||(!built('ice')&&x>1720&&y>1150)||(!built('polar')&&y<640)}
 function inTown(x,y){return y>1150&&x>=680&&x<=1720}
-const devPct=()=>Math.round(PADS.reduce((s,p)=>s+(p.id==='feast'?0:lv[p.id]),0)/TOTAL_LV*100);
+const devPct=()=>Math.round(PADS.reduce((s,p)=>s+(NODEV.includes(p.id)?0:lv[p.id]),0)/TOTAL_LV*100);
+const RANKN=['村','大きな村','町','大きな町','市','大きな市','都市','大都市','都','王都','雪原の王都'];
 function costOf(p){const c=p.cost(lv[p.id]);const o={};for(const k of['log','ore','pelt','meat','fish','crystal','coin'])if(c[k])o[k]=c[k];return o}
 
 function levelUp(p){
@@ -408,7 +416,7 @@ function levelUp(p){
   if(p.up)addText(p.x,p.y-60,p.name+' Lv'+lv[p.id]+'！','#ffd34d');
   else{addText(p.x,p.y-90,p.fence?'開拓！':p.name+' 完成！','#ffd34d');toast(p.name+'：'+p.desc)}
   if(p.up){
-    const d={axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍'}[p.id]||'';
+    const d={tools:'働き手の足が速くなり、たくさん運べるようになった',rank:'町の格が上がった：「'+RANKN[lv.rank]+'」 売値・家賃 +'+(10*lv.rank)+'%',donate:'勲章をもらった（'+lv.donate+'個）',axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍'}[p.id]||'';
     toast(p.name+' Lv'+lv[p.id]+'：'+d);
   }
   if(p.id==='feast'){feastT=120;toast('大宴会！ 2分間、売値と家賃が1.5倍！')}
@@ -434,12 +442,14 @@ function deliver(n,res,shop,sx,sy,sp,dt,pile){
   if(walkVia(n,tx,ty,sp,dt)<8){
     if(n.dest==='wh'){const k=Math.min(n.carry,storeCap-store[res]);store[res]+=k;n.carry-=k}
     else if(n.dest==='shop'){const k=Math.min(n.carry,shopCap(shop,res)-shopN(shop,res));shopAdd(shop,res,k);n.carry-=k}
-    else if(pile){const k=Math.min(n.carry,Math.max(0,60-pileN[pile.id]));pileN[pile.id]+=k;n.carry-=k}
+    else if(pile){const k=Math.min(n.carry,Math.max(0,PILECAP-pileN[pile.id]));pileN[pile.id]+=k;n.carry-=k}
     n.dest=null;if(n.carry<=0){n.carry=0;return true}
   }
   return false;
 }
+const PILECAP=120;
 function walkVia(o,x,y,sp,dt){
+  if(o!==P&&o!==dog)sp*=1+.08*(lv.tools||0);
   if(built('hotspring'))sp*=1.3;
   if(built('wall')&&inWalls(o.x,o.y)!==inWalls(x,y)){
     const out=inWalls(x,y)?o:{x,y};
@@ -640,19 +650,19 @@ function update(dt){
       const home=n.kind==='lumber'?PILES.find(p=>p.id==='plog'):PILES.find(p=>p.id==='pore'),want=n.kind==='lumber'?'tree':'rock';
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive){let bd=1e9;n.tg=null;for(const nd of nodes)if(nd.alive&&nd.kind===want&&(want==='rock'||nd.y>ZONE.A.y0)){const d=Math.hypot(nd.x-home.x,nd.y-home.y);if(d<bd&&!npcs.some(o=>o!==n&&o.tg===nd)){bd=d;n.tg=nd}}}
-        if(n.tg&&walkVia(n,n.tg.x-30,n.tg.y+8,115,dt)<6&&n.atkT<=0){n.atkT=.8*Math.pow(.95,lv.axe);n.swing=1;n.face=1;n.tg.hp-=wPow();n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,n.kind==='miner'?'#c9d3dd':'#fff');if(n.tg.hp<=0){killNode(n.tg);stat(n.kind==='lumber'?'tree':'rock');n.carry=n.kind==='lumber'?3:4;n.state='ret'}}
-      }else if(walkVia(n,home.x,home.y-12,115,dt)<6){if(pileN[home.id]<60)pileN[home.id]+=n.carry;n.carry=0;n.state='seek';n.tg=null}
+        if(n.tg&&walkVia(n,n.tg.x-30,n.tg.y+8,115,dt)<6&&n.atkT<=0){n.atkT=.8*Math.pow(.95,lv.axe);n.swing=1;n.face=1;n.tg.hp-=wPow();n.tg.wob=.3;puff(n.tg.x,n.tg.y-25,4,n.kind==='miner'?'#c9d3dd':'#fff');if(n.tg.hp<=0){killNode(n.tg);stat(n.kind==='lumber'?'tree':'rock');n.carry=(n.kind==='lumber'?5:4)+lv.tools;n.state='ret'}}
+      }else if(deliver(n,home.type,null,0,0,115,dt,home)){n.state='seek';n.tg=null}
     }else if(n.kind==='trapper'){
       const home=PILES.find(p=>p.id==='ppl');
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='wolf'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
-        if(n.tg&&walkVia(n,n.tg.x-34,n.tg.y+6,135,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,fPow(),false);if(!n.tg.alive){stat('wolf');n.carry=3;n.state='ret'}}
+        if(n.tg&&walkVia(n,n.tg.x-34,n.tg.y+6,135,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,fPow(),false);if(!n.tg.alive){stat('wolf');n.carry=3+lv.tools;n.state='ret'}}
       }else{const ps=SHOPS[1];if(deliver(n,'pelt',ps,ps.x-60,ps.y+45,135,dt,home)){n.state='seek';n.tg=null}}
     }else if(n.kind==='fisher'){
       const mk=SHOPS[0];
       if(n.state==='seek'){
         if(!n.tg||npcs.some(o=>o!==n&&o.tg===n.tg)){n.tg=HOLES.filter(h=>!npcs.some(o=>o!==n&&o.tg===h)).sort((a,b)=>Math.hypot(a.x-n.x,a.y-n.y)-Math.hypot(b.x-n.x,b.y-n.y))[0]||HOLES[0]}
-        if(walkVia(n,n.tg.x-34,n.tg.y+6,120,dt)<8){n.face=1;n.fishT=(n.fishT||0)+dt;n.swing=.3;if(n.fishT>1.4){n.fishT=0;if(Math.random()<.85){n.carry++;stat('fish');puff(n.tg.x,n.tg.y-10,6,'#bfe8ff')}if(n.carry>=6)n.state='ret'}}
+        if(walkVia(n,n.tg.x-34,n.tg.y+6,120,dt)<8){n.face=1;n.fishT=(n.fishT||0)+dt;n.swing=.3;if(n.fishT>1.4){n.fishT=0;if(Math.random()<.85){n.carry++;stat('fish');puff(n.tg.x,n.tg.y-10,6,'#bfe8ff')}if(n.carry>=6+lv.tools)n.state='ret'}}
       }else if(deliver(n,'fish',mk,mk.x+70,mk.y+45,130,dt))n.state='seek';
     }else if(n.kind==='guard'){
       let tg=null,bd=1e9;for(const r of raiders)if(r.alive){const d=dist(r,n);if(d<bd){bd=d;tg=r}}
@@ -676,14 +686,14 @@ function update(dt){
     }else if(n.kind==='porter'){
       const K=KITCHEN;
       if(n.state==='seek'&&built('kitchen')&&built('warehouse')&&!npcs.some(o=>o!==n&&(o.state==='getk'||o.state==='retk'))){
-        const need=K.ing.meat+K.ing.fish<10&&(store.meat>0||store.fish>0)?(store.meat>=store.fish?'meat':'fish'):K.ing.log<5&&store.log>0?'log':null;
+        const need=K.ing.meat+K.ing.fish<10&&(store.meat>0||store.fish>0)?(store.meat>=store.fish?'meat':'fish'):K.ing.log<5&&store.log>=30?'log':null;
         if(need){n.state='getk';n.ctype=need;n.tg=null}
       }
-      if(n.state==='getk'){if(walkTo(n,DEPO.x+30,DEPO.y,130,dt)<8){const k=Math.min(10,store[n.ctype]);store[n.ctype]-=k;n.carry=k;n.state=k?'retk':'seek'}}
+      if(n.state==='getk'){if(walkTo(n,DEPO.x+30,DEPO.y,130,dt)<8){const k=Math.max(0,Math.min(n.ctype==='log'?Math.min(10,store.log-25):10,store[n.ctype]));store[n.ctype]-=k;n.carry=k;n.state=k?'retk':'seek'}}
       else if(n.state==='retk'){if(walkTo(n,K.drop.x,K.drop.y,130,dt)<8){K.ing[n.ctype]+=n.carry;n.carry=0;n.state='seek'}}
       else if(n.state==='seek'){
         if(!n.tg||pileN[n.tg.id]<=0){let bn=0;n.tg=null;for(const p of PILES)if(p.type!=='coin'&&pileOn(p)&&pileN[p.id]>bn&&(store[p.type]<storeCap||(p.type==='ore'&&built('trade')))&&!npcs.some(o=>o!==n&&o.tg===p)){bn=pileN[p.id];n.tg=p}}
-        if(n.tg){if(walkTo(n,n.tg.x,n.tg.y+14,130,dt)<8){const k=Math.min(pileN[n.tg.id],10,Math.max(n.tg.type==='ore'&&built('trade')?10:0,storeCap-store[n.tg.type]));pileN[n.tg.id]-=k;n.carry=k;n.ctype=n.tg.type;n.state='ret';n.tg=null}}
+        if(n.tg){if(walkTo(n,n.tg.x,n.tg.y+14,130,dt)<8){const PC=20+5*lv.tools,k=Math.min(pileN[n.tg.id],PC,Math.max(n.tg.type==='ore'&&built('trade')?PC:0,storeCap-store[n.tg.type]));pileN[n.tg.id]-=k;n.carry=k;n.ctype=n.tg.type;n.state='ret';n.tg=null}}
         else walkTo(n,DEPO.x+60,DEPO.y-10,90,dt);
       }else{const ps=n.ctype==='ore'?SHOPS[3]:SHOPS[1],sell=(n.ctype==='pelt'&&shopOpen(ps)&&ps.stock<ps.cap)||(n.ctype==='ore'&&shopOpen(ps)&&store.ore>=storeCap*.8&&ps.extra.n<ps.extra.cap);
         if(walkTo(n,sell?ps.x-60:DEPO.x+30,sell?ps.y+45:DEPO.y,130,dt)<8){if(sell){const k=Math.min(n.carry,shopCap(ps,n.ctype)-shopN(ps,n.ctype));shopAdd(ps,n.ctype,k);n.carry-=k;if(n.carry>0){store[n.ctype]=Math.min(storeCap,store[n.ctype]+n.carry)}}else store[n.ctype]=Math.min(storeCap,store[n.ctype]+n.carry);n.carry=0;n.state='seek'}}
@@ -698,7 +708,7 @@ function update(dt){
       const mk=SHOPS[0];
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='bear'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
-        if(n.tg&&walkVia(n,n.tg.x-38,n.tg.y+6,125,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,fPow(),false);if(!n.tg.alive){stat('bear');n.carry=4;n.state='ret'}}
+        if(n.tg&&walkVia(n,n.tg.x-38,n.tg.y+6,125,dt)<10&&n.atkT<=0){n.atkT=.6;n.swing=1;n.face=1;hitEnemy(n.tg,fPow(),false);if(!n.tg.alive){stat('bear');n.carry=4+lv.tools;n.state='ret'}}
       }else if(deliver(n,'meat',mk,mk.x+70,mk.y+45,125,dt)){n.state='seek';n.tg=null}
     }
   }
@@ -1080,7 +1090,7 @@ function drawPad(p){
   txt(padName(p),p.x,p.y-22,p.name.length>6?11:13,'#fff');
   costRow(p.x,p.y+10,need,pd,w-10);
 }
-function padName(p){if(p.id==='feast')return feastT>0?`宴会中 ${Math.floor(feastT/60)}:${String(Math.floor(feastT%60)).padStart(2,'0')}`:p.name;return p.up?`${p.name} Lv${lv[p.id]+1}`:p.name}
+function padName(p){if(p.id==='donate')return `王国へ献上（勲章${lv.donate}）`;if(p.id==='rank')return `町の格上げ（${RANKN[Math.min(10,lv.rank+1)]}へ）`;if(p.id==='feast')return feastT>0?`宴会中 ${Math.floor(feastT/60)}:${String(Math.floor(feastT%60)).padStart(2,'0')}`:p.name;return p.up?`${p.name} Lv${lv[p.id]+1}`:p.name}
 function costRow(cx,cy,need,pd,maxW){
   const ks=Object.keys(need),fs=ks.length>2?12:14;ctx.font=`900 ${fs}px ${FONT}`;
   const it=ks.map(k=>{const s=String(Math.max(0,need[k]-pd[k]));return{k,s,w:22+ctx.measureText(s).width}});
@@ -1196,6 +1206,7 @@ function drawHUD(){
   for(let i=0;i<60;i++){const sx=(i*97.3+t*(20+i%5*6))%W,sy=(i*53.7+t*(40+i%7*8))%H;ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(sx,sy,1+i%3*.7,0,7);ctx.fill()}
   const panel=(x,y,w,h)=>{ctx.fillStyle='rgba(10,35,65,.62)';ctx.beginPath();ctx.roundRect(x,y,w,h,h/2>16?14:h/2);ctx.fill()};
   panel(12,12,138,38);coinIcon(33,31,11);txt(String(money),52,31,20,'#ffd34d','left',null);
+  if(started&&(lv.rank||lv.donate)){const s2=`${RANKN[lv.rank]}${lv.donate?'　勲章'+lv.donate:''}`;ctx.font=`800 11px ${FONT}`;const w=ctx.measureText(s2).width+16;ctx.fillStyle='rgba(120,80,10,.75)';ctx.beginPath();ctx.roundRect(150-w,4,w,16,8);ctx.fill();txt(s2,150-w/2,12,11,'#ffe27a','center',null)}
   const full=P.stack.length>=cap;
   panel(12,56,138,30);txt(`カゴ ${P.stack.length}/${cap}`,26,71,15,full?'#ff8a8a':'#fff','left',null);
   const cnt={};for(const s of P.stack)cnt[s]=(cnt[s]||0)+1;const ks=Object.keys(cnt);
