@@ -34,18 +34,22 @@
   #cfgp button:focus-visible,#cfg:focus-visible,#tutc:focus-visible{outline:3px solid #ffd34d;outline-offset:2px}
   #snd{position:fixed;right:84px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;font:inherit;font-size:12px;font-weight:800;color:#fff;background:rgba(10,35,65,.62);border:0;border-radius:14px;padding:7px 12px;cursor:pointer}
   #auto{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;font:inherit;font-size:13px;font-weight:800;color:#fff;background:rgba(20,120,110,.85);border:0;border-radius:14px;padding:7px 12px;cursor:pointer}
-  #autop{position:fixed;inset:0;z-index:30;background:rgba(10,25,45,.6);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
-  #autop[hidden]{display:none}
-  #autop .box{background:#f4f8fc;color:#0e2846;border-radius:16px;padding:16px;width:min(100%,400px);max-height:88vh;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:8px}
-  #autop h2{margin:0;font-size:18px}#autop h3{margin:6px 0 0;font-size:14px}#autop h4{margin:6px 0 0;font-size:12px;color:#4a5d75}
-  #autop .note{margin:0;font-size:12px;color:#4a5d75;line-height:1.5}
-  #autop button{font:inherit;font-size:14px;font-weight:800;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#dfe7ef;color:#0e2846}
-  #autop button.on{background:#1f9d8f;color:#fff}
-  #autop button.close{background:#5f6f82;color:#fff;justify-content:center;margin-top:6px}
-  #autop button .tag{flex:none;font-size:12px;border-radius:8px;padding:2px 8px;background:rgba(0,0,0,.12)}
-  #autop button:disabled{opacity:.55;cursor:default}
-  #autop .list{display:flex;flex-direction:column;gap:6px}
-  #autop button:focus-visible,#auto:focus-visible{outline:3px solid #ffd34d;outline-offset:2px}
+  .pnl{position:fixed;inset:0;z-index:30;background:rgba(10,25,45,.6);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+  .pnl[hidden]{display:none}
+  .pnl .box{background:#f4f8fc;color:#0e2846;border-radius:16px;padding:16px;width:min(100%,400px);max-height:88vh;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:8px}
+  .pnl h2{margin:0;font-size:18px}.pnl h3{margin:6px 0 0;font-size:14px}.pnl h4{margin:6px 0 0;font-size:12px;color:#4a5d75}
+  .pnl .note{margin:0;font-size:12px;color:#4a5d75;line-height:1.5}
+  .pnl button{font:inherit;font-size:14px;font-weight:800;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#dfe7ef;color:#0e2846}
+  .pnl button.on{background:#1f9d8f;color:#fff}
+  .pnl button.close{background:#5f6f82;color:#fff;justify-content:center;margin-top:6px}
+  .pnl button .tag{flex:none;font-size:12px;border-radius:8px;padding:2px 8px;background:rgba(0,0,0,.12)}
+  .pnl button:disabled{opacity:.55;cursor:default}
+  .pnl .list{display:flex;flex-direction:column;gap:6px}
+  .pnl button:focus-visible,#auto:focus-visible{outline:3px solid #ffd34d;outline-offset:2px}
+  .pnl .warn{margin:0;font-size:13px;color:#b3261e;font-weight:800}
+  .pnl .row{display:flex;gap:8px}.pnl .row button{flex:1;justify-content:center}
+  .pnl button.go{background:#e0782a;color:#fff;justify-content:center;font-size:16px}
+  .pnl button.yes{background:#e0782a;color:#fff}
   #mode{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;font:inherit;font-size:12px;font-weight:800;color:#fff;background:rgba(10,35,65,.62);border:0;border-radius:14px;padding:7px 12px;cursor:pointer}
 </style>
 </head>
@@ -55,7 +59,7 @@
 <button id="snd" type="button">音 ON</button>
 <button id="cfg" type="button" aria-label="設定と引き継ぎ">⚙</button>
 <button id="auto" type="button" hidden>おまかせ</button>
-<div id="autop" hidden>
+<div id="autop" class="pnl" hidden>
   <div class="box">
     <h2>おまかせ</h2>
     <button id="oSell" type="button"></button>
@@ -81,6 +85,18 @@
     <div id="cConfirm" hidden><p class="warn">今の村は上書きされます。復元しますか？</p><div class="row"><button id="cYes" type="button">はい</button><button id="cNo" type="button">やめる</button></div></div>
     <p id="cMsg" class="note" aria-live="polite"></p>
     <button id="cClose" type="button" class="close">閉じる</button>
+  </div>
+</div>
+<div id="portp" class="pnl" hidden>
+  <div class="box">
+    <h2>次の雪原へ旅立つ</h2>
+    <p class="note" id="pInfo"></p>
+    <h3 id="pMed"></h3>
+    <p class="note">勲章を「王の恩恵」に交換できます。恩恵はずっと残ります（勲章は持っているだけで売値と家賃が上がるので、使いどころを考えよう）。</p>
+    <div class="list" id="pList"></div>
+    <button id="pGo" type="button" class="go">旅立つ</button>
+    <div id="pConf" hidden><p class="warn">今の町は最初からになります（勲章・王の恩恵・最速記録は残ります）。旅立ちますか？</p><div class="row"><button id="pYes" type="button" class="yes">旅立つ</button><button id="pNo" type="button">やめる</button></div></div>
+    <button id="pClose" type="button" class="close">閉じる</button>
   </div>
 </div>
 <div id="ov">
@@ -116,7 +132,7 @@ addEventListener('resize',resize);resize();
 if(!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
 
 /* ================= world layout ================= */
-const WW=3400,WH=3090,OW=2400;
+const WW=3400,WH=3210,OW=2400;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const R=(a,b)=>a+Math.random()*(b-a);
@@ -235,6 +251,31 @@ for(const id in CAPT){const p=PADBY0(id),b=CAPT[id],c0=p.cost;
   p.cost=l=>{const c=Object.assign({},c0(l)),k=l-p.base;if(k>=0){if(b.tier===1)c.crystal=(c.crystal||0)+3*(k+1);else if(b.tier===2)c.crystal=(c.crystal||0)+6*(k+1);else{c.gold=(c.gold||0)+10*(k+1);c.gem=(c.gem||0)+k+1}}return c}}
 function PADBY0(id){return PADS.find(p=>p.id===id)}
 let beat={};
+/* runs (周回): medals and 王の恩恵 stay when you leave for the next snowfield */
+const META0=()=>({run:1,medals:0,total:0,best:0,trait:null,perks:{}});
+let meta=META0();
+const PERKS=[
+ {id:'p_coin',name:'旅の資金',max:10,cost:l=>2+l,desc:l=>`最初から ${500*l} コイン`},
+ {id:'p_bag',name:'大きなカゴ',max:5,cost:l=>3+2*l,desc:l=>`持てる数 +${4*l}`},
+ {id:'p_axe',name:'王の斧',max:5,cost:l=>3+2*l,desc:l=>`攻撃力 +${2*l}`},
+ {id:'p_hp',name:'王の毛皮',max:5,cost:l=>2+l,desc:l=>`体力 +${10*l}`},
+ {id:'p_cheap',name:'開拓の割引',max:5,cost:l=>3+l,desc:l=>`開拓の費用 -${10*l}%`},
+ {id:'p_speed',name:'働き手の足',max:5,cost:l=>2+l,desc:l=>`働き手の速さ +${10*l}%`},
+ {id:'p_train',name:'速い列車',max:3,cost:l=>4+l,desc:l=>`列車の速さ +${20*l}%`},
+ {id:'p_dog',name:'最初から犬',max:1,cost:l=>5,desc:l=>'最初から犬小屋がある'},
+];
+const perk=id=>meta.perks[id]||0;
+const TRAITS={
+ bears:{name:'クマの森',desc:'クマが多く、肉もたくさん落とす'},
+ wolves:{name:'狼の氷原',desc:'狼が多く、毛皮もたくさん落とす'},
+ gold:{name:'金の雪原',desc:'金と宝石がよく掘れる'},
+ raids:{name:'襲撃の多い年',desc:'襲撃が早く来るが、ボーナスが1.5倍'},
+ rich:{name:'景気のいい年',desc:'売値が1.25倍'},
+ blizzard:{name:'吹雪の年',desc:'外は見える範囲がせまい。補給物資が豪華'},
+};
+const trait=k=>meta.trait===k;
+const runM=()=>1+.3*(meta.run-1);// enemy health and rewards grow 30% per run
+function gainMedal(n,x,y){n=Math.max(1,Math.round(n*runM()));meta.medals+=n;meta.total+=n;addText(x==null?P.x:x,(y==null?P.y:y)-110,'勲章 +'+n,'#ffe27a');recompute();return n}
 function applyCaps(){for(const p of PADS)p.max=p.base;for(const b of BOSSES)if(beat[b.id])for(const id in b.caps)PADBY0(id).max+=b.caps[id]}
 const CATC={self:['rgba(60,170,120,.28)','#3caa78'],hire:['rgba(60,160,220,.28)','#3ca0dc'],town:['rgba(190,140,60,.3)','#be8c3c'],def:['rgba(210,70,70,.28)','#d24646'],sp:['rgba(150,90,200,.3)','#965ac8'],gold:['rgba(220,180,40,.3)','#d4ac1e'],auto:['rgba(40,160,150,.3)','#28a096']};
 const ROWS=[[2140,'自分の強化'],[2260,'働き手を雇う'],[2380,'町の運営'],[2500,'防衛'],[2630,'特別な建物'],[2760,'資材商'],[2880,'金と宝石'],[3010,'おまかせ']];
@@ -412,13 +453,13 @@ let opt={sell:true,stock:true},autoUp={},playT=0,cart=null,shake=0,trueEnd=false
 let arrowDmg,arrowInt,storeCap,dmg,atkInt,cap,speed,priceMult,meatPrice,peltPrice;
 const built=id=>lv[id]>=1;
 function recompute(){
-  const a=lv.axe;dmg=1+a+2*lv.iceaxe+3*lv.gemaxe;atkInt=.45*Math.pow(.9,a)*Math.pow(.92,lv.iceaxe);
-  cap=8+4*lv.bag;speed=215*(1+.08*lv.boots);
-  const mh=10+6*lv.coat+15*lv.gemarmor;if(P){P.hp=Math.min(mh,P.hp+(mh-P.maxHp));P.maxHp=mh}
+  const a=lv.axe;dmg=1+a+2*lv.iceaxe+3*lv.gemaxe+2*perk('p_axe');atkInt=.45*Math.pow(.9,a)*Math.pow(.92,lv.iceaxe);
+  cap=8+4*lv.bag+4*perk('p_bag');speed=215*(1+.08*lv.boots);
+  const mh=10+6*lv.coat+15*lv.gemarmor+10*perk('p_hp');if(P){P.hp=Math.min(mh,P.hp+(mh-P.maxHp));P.maxHp=mh}
   storeCap=60+60*lv.whup;for(const s of SHOPS){s.cap=Math.round(s.cap0*(1+.5*lv.whup));for(const x of s.xs||[])x.cap=Math.round(x.cap0*(1+.5*lv.whup))}
  arrowDmg=Math.round(2+1.5*lv.arrow);arrowInt=1.1*Math.pow(.88,lv.arrow);
   for(const g of GATES){g.max=30+35*lv.gateup;if(!raid||!raid.active)g.hp=g.max}
-  priceMult=(1+.25*lv.sign+.15*lv.statue+.1*lv.gstatue)*(1+.1*lv.rank);meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
+  priceMult=(1+.25*lv.sign+.15*lv.statue+.1*lv.gstatue)*(1+.1*lv.rank)*(1+.01*Math.min(50,meta.medals))*(trait('rich')?1.25:1);meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
 }
 const feastM=()=>feastT>0?1.5:1;
 const BASEP={fish:12,crystal:120,ore:4,gold:30,gem:150};
@@ -428,17 +469,18 @@ const stat=(k,n=1)=>{stats[k]=(stats[k]||0)+n};
 function spawnEnemy(type,far,zk){
   const z=ZONE[zk||ET[type].zone];let x,y;
   for(let k=0;k<25;k++){x=R(z.x0+40,z.x1-40);y=R(z.y0+40,z.y1-40);if(!far||!P||Math.hypot(x-P.x,y-P.y)>450)break}
-  const e=ET[type];return{type,x,y,hp:e.hp,max:e.hp,alive:true,tx:x,ty:y,atkT:0,flash:0,rt:0,face:1,walk:0};
+  const e=ET[type],hp=Math.round(e.hp*runM());return{type,x,y,hp,max:hp,alive:true,tx:x,ty:y,atkT:0,flash:0,rt:0,face:1,walk:0};
 }
 function reset(){
   P={x:1200,y:1560,face:1,stack:[],hp:10,maxHp:10,atkT:0,hurtT:0,lastHit:9,swing:0,walk:0,moving:false};
-  money=0;won=false;trueEnd=false;opt={sell:true,stock:true};autoUp={};playT=0;cart=null;beat={};applyCaps();lv={};paid={};for(const p of PADS){lv[p.id]=0;paid[p.id]=ZP()}
-  enemies=[];for(const k in ET)for(let i=0;i<ET[k].n;i++)enemies.push(spawnEnemy(k,false));
+  money=500*perk('p_coin');won=false;trueEnd=false;opt={sell:true,stock:true};autoUp={};playT=0;cart=null;beat={};applyCaps();lv={};paid={};for(const p of PADS){lv[p.id]=0;paid[p.id]=ZP()}
+  enemies=[];for(const k in ET)for(let i=0;i<ET[k].n+(k==='bear'&&trait('bears')?8:0)+(k==='wolf'&&trait('wolves')?7:0);i++)enemies.push(spawnEnemy(k,false));
   items=[];flyers=[];parts=[];texts=[];npcs=[];pileN={};for(const p of PILES)pileN[p.id]=0;
   for(const s of SHOPS){s.stock=0;s.buyT=0;for(const x of s.xs||[])x.n=0}
   customers=[];crate=null;crateT=40;store={log:0,ore:0,pelt:0,meat:0,fish:0,crystal:0,gold:0,gem:0};vaultN=0;
   deliv=0;tut=0;tutT=0;stats={};mis=0;misBase=0;raid={active:false,t:null,no:0,stolen:0};raiders=[];arrows=[];dog=null;KITCHEN.ing={meat:0,fish:0,log:0};KITCHEN.cookT=0;for(const h of HOLES)h.cd=0;
   for(const n of nodes){n.alive=true;n.hp=n.max}
+  if(perk('p_dog'))lv.doghouse=1;if(meta.run>1)tut=99;
   recompute();
 }
 const shopOpen=s=>!s.req||built(s.req);
@@ -473,7 +515,7 @@ function saveData(){
     else if(n.kind==='porter'){if(n.state==='retk')ing[n.ctype==='log'?'log':n.ctype]+=n.carry;else st[n.ctype]+=n.carry}
   }
   const stack=P.stack.concat(dog?dog.carry:[]);
-  return JSON.stringify({money:money+hc,lv,paid,stock,ex,ex2,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,tut,beat,opt,autoUp,pt:Math.round(playT),v:2,ts:Date.now()});
+  return JSON.stringify({money:money+hc,lv,paid,stock,ex,ex2,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,tut,beat,opt,autoUp,meta,pt:Math.round(playT),v:2,ts:Date.now()});
 }
 function save(){try{localStorage.setItem(KEY,saveData())}catch(e){}}
 const encodeSave=()=>btoa(unescape(encodeURIComponent(saveData())));
@@ -482,7 +524,10 @@ function load(dd){
   try{
     const d=dd||JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return false;
     reset();
-    beat=Object.assign({},d.beat||{});applyCaps();opt=Object.assign({sell:true,stock:true},d.opt||{});autoUp=Object.assign({},d.autoUp||{});playT=d.pt||0;trueEnd=!!beat.giant;
+    beat=Object.assign({},d.beat||{});applyCaps();
+    meta=Object.assign(META0(),d.meta||{});meta.perks=Object.assign({},meta.perks);
+    // saves from before runs existed: donations and beaten bosses turn into medals
+    if(!d.meta){meta.medals=meta.total=((d.lv&&d.lv.donate)||0)+3*['b1','b2','b3','b4'].filter(k=>beat[k]).length+(beat.giant?10:0)}opt=Object.assign({sell:true,stock:true},d.opt||{});autoUp=Object.assign({},d.autoUp||{});playT=d.pt||0;trueEnd=!!beat.giant;
     for(const id in d.lv||{})if(id in lv)lv[id]=d.lv[id];
     for(const id in d.paid||{})if(id in paid)paid[id]=Object.assign(ZP(),d.paid[id]);
     money=d.money||0;(d.stock||[]).forEach((n,i)=>{if(SHOPS[i])SHOPS[i].stock=n});(d.ex||[]).forEach((n,i)=>{if(SHOPS[i]&&SHOPS[i].xs)SHOPS[i].xs[0].n=n});(d.ex2||[]).forEach((a,i)=>{if(SHOPS[i]&&SHOPS[i].xs)a.forEach((n,j)=>{if(SHOPS[i].xs[j])SHOPS[i].xs[j].n=n})});
@@ -528,22 +573,22 @@ function locked(x,y){
 function inTown(x,y){return y>1150&&x>=680&&x<=1720}
 const devPct=()=>Math.round((PADS.reduce((s,p)=>s+(NODEV.includes(p.id)?0:lv[p.id]),0)+BOSSES.filter(b=>beat[b.id]).length)/TOTAL_LV*100);
 const RANKN=['村','大きな村','町','大きな町','市','大きな市','都市','大都市','都','王都','雪原の王都'];
-function costOf(p){const c=p.cost(lv[p.id]);const o={};for(const k of['log','ore','pelt','meat','fish','crystal','gold','gem','coin'])if(c[k])o[k]=c[k];return o}
+function costOf(p){const c=p.cost(lv[p.id]);const o={};for(const k of['log','ore','pelt','meat','fish','crystal','gold','gem','coin'])if(c[k])o[k]=c[k];if(p.fence&&o.coin&&perk('p_cheap'))o.coin=Math.round(o.coin*(1-.1*perk('p_cheap')));return o}
 
 function levelUp(p){
   lv[p.id]++;paid[p.id]=ZP();p.lock=true;p.payT=0;p.st=0;
-  recompute();syncNPCs();
+  recompute();syncNPCs();if(p.id==='donate')gainMedal(1,p.x,p.y);
   puff(p.x,p.y-20,30,'#fff');puff(p.x,p.y-20,16,'#ffd34d');
   if(p.up)addText(p.x,p.y-60,p.name+' Lv'+lv[p.id]+'！','#ffd34d');
   else{addText(p.x,p.y-90,p.fence?'開拓！':p.name+' 完成！','#ffd34d');toast(p.name+'：'+p.desc)}
   if(p.up){
-    const d={tools:'働き手の足が速くなり、たくさん運べるようになった',rank:'町の格が上がった：「'+RANKN[lv.rank]+'」 売値・家賃 +'+(10*lv.rank)+'%',donate:'勲章をもらった（'+lv.donate+'個）',axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}・お店の棚も広がった`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍',
+    const d={tools:'働き手の足が速くなり、たくさん運べるようになった',rank:'町の格が上がった：「'+RANKN[lv.rank]+'」 売値・家賃 +'+(10*lv.rank)+'%',donate:`勲章をもらった（${meta.medals}個・売値と家賃 +${Math.min(50,meta.medals)}%）`,axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}・お店の棚も広がった`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍',
       torch:'洞窟で見える範囲が広がった',gemaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,gemarmor:`体力 ${P.maxHp}・受けるダメージ -${10*lv.gemarmor}%`,gstatue:`売値と家賃 +${10*lv.gstatue}%`,cartup:'列車がたくさん運ぶようになった',lamps:'洞窟に灯りがともった'}[p.id]||'';
     toast(p.name+' Lv'+lv[p.id]+'：'+d);
   }
   if(p.id==='feast'){feastT=120;toast('大宴会！ 2分間、売値と家賃が1.5倍！')}
   sfx(p.up?'up':'build');
-  if(p.id==='bigfurnace'&&!won){won=true;setTimeout(()=>{ovT.textContent='町が完成！';ovP.innerHTML='大かまどに火がともり、雪原の町は凍えることがなくなった！<br>…でも、東の氷河の洞窟から地鳴りがする。<br>白熊の巣の東に「洞窟を開拓」が出たよ。<br>氷原の南に<b>狼王</b>が現れた！<br>ボスを倒すと強化の上限が上がるよ（地図の赤い丸）。';ovB.textContent='冒険を続ける';ovR.hidden=false;ov.hidden=false},900)}
+  if(p.id==='bigfurnace'&&!won){won=true;setTimeout(()=>{ovT.textContent='町が完成！';ovP.innerHTML='大かまどに火がともり、雪原の町は凍えることがなくなった！<br>…でも、東の氷河の洞窟から地鳴りがする。<br>白熊の巣の東に「洞窟を開拓」が出たよ。<br>氷原の南に<b>狼王</b>が現れた！<br>ボスを倒すと強化の上限が上がるよ（地図の赤い丸）。';ovB.textContent='冒険を続ける';ovR.hidden=true;ov.hidden=false},900)}
   save();
 }
 
@@ -578,7 +623,7 @@ const PILECAP=120;
 // warehouse, shop and pile all full: sell the rest at the sell-off price (can be turned off in the おまかせ panel)
 function autoSell(k,n,x,y){if(!opt.sell||n<=0)return false;const g=(SELLP[k]||1)*n;money+=g;stat('autosold',g);if(Math.random()<.4)addText(x,y-60,'+'+g,'#ffd34d');return true}
 function walkVia(o,x,y,sp,dt){
-  if(o!==P&&o!==dog)sp*=1+.08*(lv.tools||0);
+  if(o!==P&&o!==dog)sp*=(1+.08*(lv.tools||0))*(1+.1*perk('p_speed'));
   if(built('hotspring'))sp*=1.3;
   if(built('wall')&&inWalls(o.x,o.y)!==inWalls(x,y)){
     const out=inWalls(x,y)?o:{x,y};
@@ -600,7 +645,7 @@ function startRaid(){
   for(let i=0;i<n;i++){
     const s=sp[i%sp.length],x=R(s.x[0],s.x[1]),y=R(s.y[0],s.y[1]);
     const gate=y<WALL.y0?GATES[0]:x<WALL.x0?GATES[1]:GATES[2];
-    const boss=i<rs.boss,hp=boss?rs.hp*4:rs.hp;
+    const boss=i<rs.boss,hp=Math.round((boss?rs.hp*4:rs.hp)*runM());
     raiders.push({type:boss?'alpha':'raider',x,y,hp,max:hp,alive:true,atkT:0,flash:0,face:1,walk:0,gate,dmg:(1+Math.floor(raid.no/3))*(boss?2:1),gdmg:(1+Math.floor(raid.no/3))*(boss?3:1),sp:boss?R(70,80):R(85,105)});
   }
   toast(`襲撃だ！ 狼の群れ ${n}体${rs.boss?`（大狼×${rs.boss}）`:''}が向かってくる！`);
@@ -608,9 +653,9 @@ function startRaid(){
 function endRaid(){
   raid.active=false;raiders=[];raid.no++;stat('raid');
   for(const g of GATES)g.hp=g.max;
-  if(raid.stolen===0){const b=Math.round((30+raid.no*20)*(raid.mult||1));money+=b;toast(`襲撃をしのいだ！ ボーナス +${b}`);addText(P.x,P.y-80,'+'+b,'#ffd34d')}
+  if(raid.stolen===0){const b=Math.round((30+raid.no*20)*(raid.mult||1)*runM()*(trait('raids')?1.5:1));money+=b;toast(`襲撃をしのいだ！ ボーナス +${b}`);addText(P.x,P.y-80,'+'+b,'#ffd34d')}
   else toast(`襲撃は終わった…（${raid.stolen}コイン盗まれた）`);
-  raid.t=R(150,210);save();
+  raid.t=R(150,210)*(trait('raids')?.6:1);save();
 }
 
 /* ================= tutorial ================= */
@@ -777,6 +822,9 @@ function update(dt){
     }else{p.payT=0;p.st=0;p.lock=false}
   }
 
+  /* departure port: standing on it opens the run panel */
+  {const inn=portOpen()&&Math.abs(P.x-PORT.x)<70&&Math.abs(P.y-PORT.y)<34;if(inn&&!portIn&&window.__openPort)window.__openPort();portIn=inn}
+
   /* npcs */
   for(const n of npcs){
     n.swing=Math.max(0,n.swing-dt*4);n.atkT-=dt;
@@ -852,7 +900,7 @@ function update(dt){
 
   /* raids */
   if(built('house2')){
-    if(raid.t==null)raid.t=180;
+    if(raid.t==null)raid.t=trait('raids')?110:180;
     if(!raid.active){raid.t-=dt;if(raid.t<=0)startRaid()}
   }
   for(const g of GATES)g.flash=Math.max(0,g.flash-dt);
@@ -910,13 +958,13 @@ function update(dt){
     }
   }
   /* missions */
-  {const m=curMission();if(misProg(m)>=m.n){money+=m.r;sfx('mission');toast(`ミッション達成！「${m.txt}」 +${m.r}コイン`);addText(P.x,P.y-90,'+'+m.r,'#ffd34d');mis++;misBase=stats[curMission().k]||0;save()}}
+  {const m=curMission();if(misProg(m)>=m.n){const mr=Math.round(m.r*runM());money+=mr;if((mis+1)%5===0)gainMedal(1);sfx('mission');toast(`ミッション達成！「${m.txt}」 +${mr}コイン`);addText(P.x,P.y-90,'+'+mr,'#ffd34d');mis++;misBase=stats[curMission().k]||0;save()}}
 
   /* mine train: rides the rail into the cave and brings gold (and sometimes gems) to the station piles */
   if(built('cart')){
     if(!cart)cart={y:RAIL0,dir:1,wait:2,load:0,gem:0};
     if(cart.wait>0)cart.wait-=dt;
-    else{cart.y+=cart.dir*90*(1+.2*lv.cartup)*dt;
+    else{cart.y+=cart.dir*90*(1+.2*lv.cartup)*(1+.2*perk('p_train'))*dt;
       if(cart.dir>0&&cart.y>=RAIL1){cart.y=RAIL1;cart.dir=-1;cart.wait=3;cart.load=6+3*lv.cartup;cart.gem=Math.random()<.3+.1*lv.cartup?1+Math.floor(lv.cartup/2):0}
       else if(cart.dir<0&&cart.y<=RAIL0){cart.y=RAIL0;cart.dir=1;cart.wait=2.5;
         // straight to the warehouse; what does not fit waits at the station piles
@@ -931,7 +979,7 @@ function update(dt){
   if(!crate&&crateT<=0){
     const zs=['A'];if(built('mine'))zs.push('B');if(built('ice'))zs.push('C');if(built('polar'))zs.push('D');
     const z=ZONE[zs[Math.floor(Math.random()*zs.length)]];
-    crate={x:R(z.x0+60,z.x1-60),y:R(z.y0+60,z.y1-60),fall:1,v:(30+devPct()*4)*(built('lighthouse')?2:1)};
+    crate={x:R(z.x0+60,z.x1-60),y:R(z.y0+60,z.y1-60),fall:1,v:(30+devPct()*4)*(built('lighthouse')?2:1)*runM()*(trait('blizzard')?2:1)};
     toast('補給物資が落ちてきた！ 地図の★を探そう');
   }
   if(crate){
@@ -956,7 +1004,7 @@ function hitEnemy(e,d,byPlayer){
   if(e.hp<=0&&e.bid){e.alive=false;beatBoss(e);return}
   if(e.hp<=0){
     e.alive=false;e.rt=cf.resp;puff(e.x,e.y-15,18*cf.size,'#fff');
-    if(byPlayer)for(const k in cf.drop)for(let i=0;i<cf.drop[k];i++)dropItem(e.x,e.y,k);
+    if(byPlayer)for(const k in cf.drop)for(let i=0;i<cf.drop[k]+(trait('bears')&&e.type==='bear'&&k==='meat'?2:0)+(trait('wolves')&&e.type==='wolf'&&k==='pelt'?1:0);i++)dropItem(e.x,e.y,k);
     if(e.type==='polar'&&byPlayer){const b=50+devPct();money+=b;addText(e.x,e.y-90,'+'+b,'#ffd34d');toast('白熊を倒した！ 肉・毛皮・氷晶がたくさん！');sfx('mission')}
     const isR=e.type==='raider'||e.type==='alpha';
     if(byPlayer&&!isR)stat(e.type);
@@ -972,8 +1020,10 @@ function porterStock(n){
       if(store[k]>=Math.max(8,storeCap*.5)&&shopN(s0,k)<shopCap(s0,k)*.6&&!npcs.some(o=>o!==n&&o.shopT===s0&&o.ctype===k)){n.shopT=s0;n.ctype=k;n.state='getS';n.tg=null;return true}}}
   return false;
 }
-function helperNeed(p){const need=costOf(p),pd=paid[p.id],o={};for(const k in need){const r=need[k]-pd[k];if(r>0)o[k]=r}return o}
-function helperCan(p){const o=helperNeed(p);for(const k in o)if(k==='coin'?money<o[k]:(store[k]||0)<o[k])return false;return true}
+// what a pad still needs, minus what other helpers are already carrying to it
+function helperNeed(p,n){const need=costOf(p),pd=paid[p.id],o={};for(const k in need){let r=need[k]-pd[k];for(const h of npcs)if(h!==n&&h.tg===p&&h.load&&h.load[k])r-=h.load[k];if(r>0)o[k]=r}return o}
+const helperCap=()=>20+5*lv.tools;
+function helperCan(p,n){const o=helperNeed(p,n);if(!Object.keys(o).length)return false;for(const k in o)if(k==='coin'?money<o[k]:(store[k]||0)<o[k])return false;return true}
 const helperOk=p=>autoUp[p.id]&&visible(p)&&!p.fence&&!(p.id==='feast'&&feastT>0);
 function helperBack(n){if(!n.load)return;for(const k in n.load){const v=n.load[k];if(!v)continue;if(k==='coin')money+=v;else{const a=Math.min(v,storeCap-store[k]);store[k]+=a;autoSell(k,v-a,n.x,n.y)}}n.load=null}
 // upgrade helper: picks a pad you marked, takes what it still needs from the warehouse (coins from your purse) and pays it there
@@ -981,12 +1031,14 @@ function helperTick(n,dt){
   const H=PADBY.helper;
   if(n.state==='seek'){
     let best=null,bv=1e18;
-    if(built('warehouse'))for(const p of PADS)if(helperOk(p)&&!npcs.some(o=>o!==n&&o.tg===p)&&helperCan(p)){const c=helperNeed(p);let v=c.coin||0;for(const k in c)if(k!=='coin')v+=c[k]*SELLP[k]*2;if(v<bv){bv=v;best=p}}
+    if(built('warehouse'))for(const p of PADS)if(helperOk(p)&&helperCan(p,n)){const c=helperNeed(p,n);let v=c.coin||0;for(const k in c)if(k!=='coin')v+=c[k]*SELLP[k]*2;if(v<bv){bv=v;best=p}}
     if(best){n.tg=best;n.state='getU'}else walkVia(n,H.x+50+(npcs.indexOf(n)%3)*20,H.y+50,90,dt);
   }else if(n.state==='getU'){
     if(walkVia(n,DEPO.x+20,DEPO.y-10,160,dt)<10){
-      const p=n.tg;if(!helperOk(p)||!helperCan(p)){n.state='seek';n.tg=null;return}
-      n.load=helperNeed(p);for(const k in n.load){if(k==='coin')money-=n.load[k];else store[k]-=n.load[k]}
+      const p=n.tg;if(!helperOk(p)||!helperCan(p,n)){n.state='seek';n.tg=null;return}
+      // coins are paid in one go; goods only as many as a helper can carry per trip
+      const c=helperNeed(p,n);let room=helperCap();n.load={};
+      for(const k in c){if(k==='coin'){n.load.coin=c.coin;money-=c.coin}else if(room>0){const a=Math.min(c[k],room);n.load[k]=a;store[k]-=a;room-=a}}
       n.ctype=Object.keys(n.load).find(k=>k!=='coin')||'coin';n.state='payU';
     }
   }else{
@@ -997,16 +1049,23 @@ function helperTick(n,dt){
       helperBack(n);n.state='seek';n.tg=null;
     }
   }
-  n.carry=n.load?Math.min(6,Object.keys(n.load).length*2):0;
+  n.carry=n.load?Math.min(6,Math.ceil(Object.keys(n.load).reduce((a,k)=>a+(k==='coin'?0:n.load[k]),0)/5)||1):0;
 }
 
 /* ================= bosses & telegraphed attacks ================= */
 const RAIL0=800,RAIL1=2180;
+const PORT={x:1200,y:3140};let portIn=false;
+const portOpen=()=>!!beat.giant;
+function travel(){
+  meta.run++;const ks=Object.keys(TRAITS);meta.trait=ks[Math.floor(Math.random()*ks.length)];
+  reset();syncNPCs();P.hp=P.maxHp;started=true;save();
+  const T=TRAITS[meta.trait];toast(`${meta.run}周目の雪原へ！ 今回は「${T.name}」：${T.desc}`);sfx('build');
+}
 function syncBosses(){
   for(const b of BOSSES){
     if(beat[b.id]||!b.when()||enemies.some(e=>e.bid===b.id))continue;
     const cf=ET[b.type];
-    enemies.push({type:b.type,bid:b.id,x:b.x,y:b.y,hx:b.x,hy:b.y,hp:cf.hp,max:cf.hp,alive:true,tx:b.x,ty:b.y,atkT:2,flash:0,rt:0,face:-1,walk:0,ai:0,phase:0});
+    enemies.push({type:b.type,bid:b.id,x:b.x,y:b.y,hx:b.x,hy:b.y,hp:Math.round(cf.hp*runM()),max:Math.round(cf.hp*runM()),alive:true,tx:b.x,ty:b.y,atkT:2,flash:0,rt:0,face:-1,walk:0,ai:0,phase:0});
     if(started&&!stats['seen_'+b.id]){stats['seen_'+b.id]=1;toast(`${b.name}が${b.where}に現れた！ 倒すと強化の上限が上がる`);sfx('horn',1)}
   }
 }
@@ -1028,7 +1087,7 @@ function tickTele(e,dt){
   return false;
 }
 function summon(e,type,zk){const cf=ET[type],a=Math.random()*6.28,x=e.x+Math.cos(a)*130,y=e.y+Math.sin(a)*130;
-  enemies.push({type,x,y,hp:cf.hp,max:cf.hp,alive:true,tx:x,ty:y,atkT:1,flash:0,rt:0,face:1,walk:0,summon:true,by:e,zone:zk});puff(x,y-20,14,'#fff')}
+  enemies.push({type,x,y,hp:Math.round(cf.hp*runM()),max:Math.round(cf.hp*runM()),alive:true,tx:x,ty:y,atkT:1,flash:0,rt:0,face:1,walk:0,summon:true,by:e,zone:zk});puff(x,y-20,14,'#fff')}
 function bossTick(e,dt){
   const cf=ET[e.type],z=ZONE[cf.zone],sz=cf.size;
   e.flash=Math.max(0,e.flash-dt);
@@ -1061,19 +1120,21 @@ function beatBoss(e){
   beat[b.id]=1;applyCaps();stat('boss');
   for(const o of enemies)if(o.by===e)o.alive=false;
   for(const k in cf.drop)for(let i=0;i<cf.drop[k];i++)dropItem(e.x+R(-40,40),e.y+R(-30,30),k);
-  money+=b.coin;addText(e.x,e.y-140,'+'+b.coin,'#ffd34d');for(let i=0;i<10;i++)flyTo(e.x,e.y-40,P.x,P.y-40,'coin');
+  const bc=Math.round(b.coin*runM());money+=bc;addText(e.x,e.y-140,'+'+bc,'#ffd34d');gainMedal(b.id==='giant'?10:3,e.x,e.y-40);for(let i=0;i<10;i++)flyTo(e.x,e.y-40,P.x,P.y-40,'coin');
   puff(e.x,e.y-40,50,'#fff');puff(e.x,e.y-40,24,'#ffd34d');shake=.5;sfx('mission');sfx('build');
   const cs=Object.keys(b.caps).map(k=>CAPN[k]).join('・');
   toast(cs?`${b.name}を倒した！ 上限アップ：${cs}`:`${b.name}を倒した！`);
-  if(b.id==='giant'&&!trueEnd){trueEnd=true;const m=Math.floor(playT/60);
-    setTimeout(()=>{ovT.textContent='本当のエンディング';ovP.innerHTML=`雪の巨人をたおした！<br>吹雪がやみ、雪原に春の光がさしこんだ。<br>町の人たちは、あなたを「雪原の英雄」とよんだ。<br><br>クリア時間：${Math.floor(m/60)}時間${m%60}分<br>強化を続けて遊ぶこともできるよ。`;ovB.textContent='遊び続ける';ovR.hidden=false;ov.hidden=false},1500)}
+  if(b.id==='giant'&&!trueEnd){trueEnd=true;const m=Math.floor(playT/60),hm=t=>`${Math.floor(t/60)}時間${t%60}分`;
+    // faster clears give more medals; the best time is kept across runs
+    const bonus=gainMedal(Math.max(1,12-Math.floor(m/10)),e.x,e.y-80),rec=!meta.best||m<meta.best;if(rec)meta.best=m;
+    setTimeout(()=>{ovT.textContent='本当のエンディング';ovP.innerHTML=`雪の巨人をたおした！<br>吹雪がやみ、雪原に春の光がさしこんだ。<br>町の人たちは、あなたを「雪原の英雄」とよんだ。<br><br>${meta.run}周目　クリア時間：${hm(m)}${rec?'（最速記録！）':`（最速 ${hm(meta.best)}）`}<br>早さのボーナス：勲章 +${bonus}<br><br>町のいちばん南に<b>「旅立ちの港」</b>ができた。<br>勲章を「王の恩恵」に交換して、次の雪原へ旅立てるよ。`;ovB.textContent='遊び続ける';ovR.hidden=true;ov.hidden=false},1500)}
   save();
 }
 const NDROP={rock:['ore',2],crystal:['crystal',2],bigtree:['log',5],tree:['log',3],goldv:['gold',2],gem:['gem',1]};
 function hitNode(n,d,byPlayer){
   const hard=n.kind!=='tree'&&n.kind!=='bigtree';
   n.hp-=d;n.wob=.3;puff(n.x,n.y-30,6,n.kind==='crystal'?'#9fe6ff':n.kind==='goldv'?'#ffd34d':n.kind==='gem'?'#ff9be4':hard?'#c9d3dd':'#fff');if(byPlayer)sfx(hard?'mine':'chop',.05);
-  if(n.hp<=0){killNode(n);if(byPlayer){const[k,c]=NDROP[n.kind];stat(n.kind==='bigtree'?'tree':n.kind);for(let i=0;i<c;i++)dropItem(n.x,n.y,k)}}
+  if(n.hp<=0){killNode(n);if(byPlayer){const[k,c0]=NDROP[n.kind],c=c0*(trait('gold')&&(n.kind==='goldv'||n.kind==='gem')?2:1);stat(n.kind==='bigtree'?'tree':n.kind);for(let i=0;i<c;i++)dropItem(n.x,n.y,k)}}
 }
 function killNode(n){n.alive=false;n.rt={rock:10,crystal:40,goldv:20,gem:45}[n.kind]||9;puff(n.x,n.y-35,16,n.kind==='crystal'?'#9fe6ff':n.kind==='goldv'?'#ffd34d':n.kind==='gem'?'#ff7ad9':n.kind==='rock'?'#c9d3dd':'#fff')}
 function walkTo(o,x,y,sp,dt){const dx=x-o.x,dy=y-o.y,l=Math.hypot(dx,dy);if(l>1){const s=Math.min(l,sp*dt);o.x+=dx/l*s;o.y+=dy/l*s;o.walk=(o.walk||0)+dt*11;if(Math.abs(dx)>2)o.face=dx>0?1:-1}return l}
@@ -1432,15 +1493,18 @@ function caveDark(){
 function caveLights(){const L=CAVE_LIGHTS.slice();for(let i=0;i<Math.min(LAMPS.length,3*lv.lamps);i++)L.push([LAMPS[i][0],LAMPS[i][1],210]);return L}
 const DKC=document.createElement('canvas');
 function drawDark(){
-  const dk=caveDark();if(dk<=0)return;
+  let dk=caveDark(),pr=torchR(),fog='4,9,22';
+  if(trait('blizzard')&&!inTown(P.x,P.y)&&!(inCave(P.x,P.y)&&P.y<DOORY+40)&&dk<.6){dk=.6;pr=330;fog='225,234,244'}
+  if(dk<=0)return;
   if(DKC.width!==Math.round(W*DPR)||DKC.height!==Math.round(H*DPR)){DKC.width=Math.round(W*DPR);DKC.height=Math.round(H*DPR)}
   const c=DKC.getContext('2d');c.setTransform(DPR,0,0,DPR,0,0);c.globalCompositeOperation='source-over';c.clearRect(0,0,W,H);
-  c.fillStyle=`rgba(4,9,22,${.94*dk})`;c.fillRect(0,0,W,H);c.globalCompositeOperation='destination-out';
+  c.fillStyle=`rgba(${fog},${.94*dk})`;c.fillRect(0,0,W,H);c.globalCompositeOperation='destination-out';
   const p0=w2s(P.x,P.y,0),sc=Math.max(.2,Math.hypot(w2s(P.x+100,P.y,0).x-p0.x,w2s(P.x+100,P.y,0).y-p0.y)/100);
   const hole=(x,y,r,a)=>{const p=w2s(x,y,0),rr=r*sc;if(p.x<-rr||p.x>W+rr||p.y<-rr||p.y>H+rr)return;const g=c.createRadialGradient(p.x,p.y,rr*.25,p.x,p.y,rr);g.addColorStop(0,`rgba(0,0,0,${a})`);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.beginPath();c.arc(p.x,p.y,rr,0,7);c.fill()};
-  hole(P.x,P.y-20,torchR()*(1+Math.sin(t*9)*.03),1);for(const[x,y,r]of caveLights())hole(x,y,r,.9);
+  hole(P.x,P.y-20,pr*(1+Math.sin(t*9)*.03),1);for(const[x,y,r]of caveLights())hole(x,y,r,.9);
   c.globalCompositeOperation='source-over';
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DKC,0,0);ctx.restore();
+  if(fog!=='4,9,22')return;
   // warm torch tint, then sparkles of ore and glowing eyes that show through the dark
   {const g=ctx.createRadialGradient(p0.x,p0.y,10,p0.x,p0.y,torchR()*sc);g.addColorStop(0,`rgba(255,170,70,${.16*dk})`);g.addColorStop(1,'rgba(255,170,70,0)');ctx.fillStyle=g;ctx.fillRect(p0.x-torchR()*sc,p0.y-torchR()*sc,torchR()*sc*2,torchR()*sc*2)}
   for(const n of nodes)if(n.alive&&(n.kind==='goldv'||n.kind==='gem')){const p=w2s(n.x,n.y,30);if(p.x<-20||p.x>W+20||p.y<-20||p.y>H+20)continue;const tw=.5+.5*Math.sin(t*4+n.x);ctx.globalAlpha=dk*(.35+.65*tw);
@@ -1514,6 +1578,7 @@ function render2D(){
     if(built('merchant'))for(const z of BZ){zone(z.x,z.y,72,52,Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);itemIcon(z.type,z.x,z.y-10,.9);coinIcon(z.x-12,z.y+12,5.5);txt(String(BUYP[z.type]),z.x-4,z.y+12,10,'#ffd34d','left')}
   }
   for(const[y,nm]of ROWS)if(inV(1200,y))txt('▼ '+nm+' ▼',1200,y-60,13,'#ffffff','center','rgba(20,40,60,.55)');
+  if(portOpen()&&inV(PORT.x,PORT.y)){const near=Math.abs(P.x-PORT.x)<70&&Math.abs(P.y-PORT.y)<34;txt('▼ 旅立ち ▼',PORT.x,PORT.y-60,13,'#ffffff','center','rgba(20,40,60,.55)');zone(PORT.x,PORT.y,150,64,near);txt('旅立ちの港',PORT.x,PORT.y-9,14,'#fff');txt(`次は${meta.run+1}周目`,PORT.x,PORT.y+12,11,'#ffe27a')}
   for(const it of items)if(inV(it.x,it.y)){shadow(it.x,it.y,10);itemIcon(it.type,it.x,it.y-6-it.z+Math.sin(t*4+it.x)*1.5,1)}
   // sortable
   const L=[];
@@ -1560,7 +1625,7 @@ function drawHUD(){
   for(let i=0;i<60;i++){const sx=(i*97.3+t*(20+i%5*6))%W,sy=(i*53.7+t*(40+i%7*8))%H;ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(sx,sy,1+i%3*.7,0,7);ctx.fill()}
   const panel=(x,y,w,h)=>{ctx.fillStyle='rgba(10,35,65,.62)';ctx.beginPath();ctx.roundRect(x,y,w,h,h/2>16?14:h/2);ctx.fill()};
   panel(12,12,138,38);coinIcon(33,31,11);txt(String(money),52,31,20,'#ffd34d','left',null);
-  if(started&&(lv.rank||lv.donate)){const s2=`${RANKN[lv.rank]}${lv.donate?'　勲章'+lv.donate:''}`;ctx.font=`800 11px ${FONT}`;const w=ctx.measureText(s2).width+16;ctx.fillStyle='rgba(120,80,10,.75)';ctx.beginPath();ctx.roundRect(150-w,4,w,16,8);ctx.fill();txt(s2,150-w/2,12,11,'#ffe27a','center',null)}
+  if(started&&(lv.rank||meta.medals||meta.run>1)){const s2=[meta.run>1?`${meta.run}周目${meta.trait?'・'+TRAITS[meta.trait].name:''}`:'',lv.rank?RANKN[lv.rank]:'',meta.medals?'勲章'+meta.medals:''].filter(Boolean).join('　');ctx.font=`800 11px ${FONT}`;const w=ctx.measureText(s2).width+16;ctx.fillStyle='rgba(120,80,10,.75)';ctx.beginPath();ctx.roundRect(12,1,w,16,8);ctx.fill();txt(s2,12+w/2,9,11,'#ffe27a','center',null)}
   const full=P.stack.length>=cap;
   panel(12,56,138,30);txt(`カゴ ${P.stack.length}/${cap}`,26,71,15,full?'#ff8a8a':'#fff','left',null);
   const cnt={};for(const s of P.stack)cnt[s]=(cnt[s]||0)+1;const ks=Object.keys(cnt);
@@ -2057,6 +2122,7 @@ function render3D(){
   zon('vault',VZ.x,VZ.y,96,52,built('vault'),Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);
   zon('sellz',SELLZ.x,SELLZ.y,68,52,built('warehouse'),Math.abs(P.x-SELLZ.x)<34&&Math.abs(P.y-SELLZ.y)<26);
   zon('dlv',DLV.x,DLV.y,68,52,built('warehouse'),Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26);
+  zon('port',PORT.x,PORT.y,150,64,portOpen(),Math.abs(P.x-PORT.x)<70&&Math.abs(P.y-PORT.y)<34);
   BZ.forEach((z,i)=>zon('b'+i,z.x,z.y,72,52,built('merchant'),Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26));
   // shops & stock
   SHOPS.forEach((s,i)=>{const sh=g.shops[i];if(!sh)return;sh.o.visible=shopOpen(s);if(!sh.o.visible)return;
@@ -2123,6 +2189,7 @@ function drawOverlay3D(){
   if(built('cart'))lbl(PADBY.cart.x,PADBY.cart.y,120,'鉱山列車の駅',12,'#fff');
   if(lv.gstatue)lbl(2800,600,110,'金の像 Lv'+lv.gstatue,11,'#fff');
   for(const[y,nm]of ROWS){const c=w2s(1200,y-60,0);if(on(c))txt('▼ '+nm+' ▼',c.x,c.y,13,'#ffffff','center')}
+  if(portOpen()){const c=w2s(PORT.x,PORT.y,0),c2=w2s(PORT.x,PORT.y-60,0);if(on(c2))txt('▼ 旅立ち ▼',c2.x,c2.y,13,'#ffffff','center');if(on(c)){txt('旅立ちの港',c.x,c.y-8,14,'#fff');txt(`次は${meta.run+1}周目`,c.x,c.y+11,11,'#ffe27a')}}
   // pads
   for(const p of PADS){if(!visible(p))continue;const c=w2s(p.x,p.y,0);if(!on(c,80))continue;
     const need=costOf(p),pd=paid[p.id],nm=padName(p);
@@ -2227,7 +2294,7 @@ addEventListener('pointerdown',()=>{if(started&&AU.on)auInit()});
  function draw(force){
    $('oSell').className=opt.sell?'on':'';$('oSell').innerHTML=`<span>あふれた素材を自動で売る（半値）</span><span class="tag">${opt.sell?'ON':'OFF'}</span>`;
    $('oStock').className=opt.stock?'on':'';$('oStock').innerHTML=`<span>倉庫の余りをお店に並べる</span><span class="tag">${opt.stock?'ON':'OFF'}</span>`;
-   $('aNote').textContent=built('helper')?`強化係 ${npcs.filter(n=>n.kind==='helper').length}人。ONにした強化を、倉庫の素材と手持ちのお金で、足りしだい進めてくれます。`:'強化広場のいちばん下「おまかせ」の列で「強化係の小屋」を建てると、ONにした強化を倉庫の素材と手持ちのお金で進めてくれます。';
+   $('aNote').textContent=built('helper')?`強化係 ${npcs.filter(n=>n.kind==='helper').length}人。ONにした強化を、倉庫の素材と手持ちのお金で、足りしだい進めてくれます。1回に運べる素材は${helperCap()}個（働き手の道具で増える）。`:'強化広場のいちばん下「おまかせ」の列で「強化係の小屋」を建てると、ONにした強化を倉庫の素材と手持ちのお金で進めてくれます。';
    const ps=padList(),ns=ps.map(p=>p.id).join();
    if(force||ns!==sig){sig=ns;list.innerHTML='';
      const groups=ROWS.map(([y,nm])=>[nm,p=>p.cat&&p.y===y]).concat([['建物',p=>!p.cat]]);
@@ -2240,13 +2307,27 @@ addEventListener('pointerdown',()=>{if(started&&AU.on)auInit()});
  $('auto').onclick=()=>{draw(true);pan.hidden=false};$('aClose').onclick=()=>{pan.hidden=true};
  $('oSell').onclick=()=>{opt.sell=!opt.sell;save();draw()};$('oStock').onclick=()=>{opt.stock=!opt.stock;save();draw()};
  setInterval(()=>{$('auto').hidden=!started||!built('warehouse');if(!pan.hidden)draw()},700);}
+{const $=id=>document.getElementById(id),pan=$('portp'),list=$('pList');
+ function draw(){
+   const hm=t=>`${Math.floor(t/60)}時間${t%60}分`;
+   $('pInfo').innerHTML=`いまは${meta.run}周目${meta.trait?`（${TRAITS[meta.trait].name}）`:''}。${meta.best?`最速記録 ${hm(meta.best)}。`:''}<br>次の${meta.run+1}周目は、敵の体力と、もらえるお金・勲章が最初より <b>+${30*meta.run}%</b>。雪原の特徴はランダムで決まります。`;
+   $('pMed').textContent=`持っている勲章：${meta.medals}`;
+   list.innerHTML='';
+   for(const k of PERKS){const l=perk(k.id),mx=l>=k.max,c=k.cost(l),b=document.createElement('button');b.type='button';b.disabled=mx||meta.medals<c;
+     b.innerHTML=`<span>${k.name}　Lv${l}<br><small>${mx?k.desc(l):(l?k.desc(l)+' → ':'')+k.desc(l+1)}</small></span><span class="tag">${mx?'最大':'勲章 '+c}</span>`;
+     b.onclick=()=>{if(meta.medals<c||mx)return;meta.medals-=c;meta.perks[k.id]=l+1;recompute();save();sfx('up');draw()};list.appendChild(b)}
+ }
+ window.__openPort=()=>{draw();$('pConf').hidden=true;$('pGo').hidden=false;pan.hidden=false};
+ $('pClose').onclick=()=>{pan.hidden=true};$('pGo').onclick=()=>{$('pConf').hidden=false;$('pGo').hidden=true};
+ $('pNo').onclick=()=>{$('pConf').hidden=true;$('pGo').hidden=false};
+ $('pYes').onclick=()=>{pan.hidden=true;travel()};}
 if(hasSave()){ovB.textContent='つづきから';ovR.hidden=false}
 ovB.onclick=()=>{auInit();if(!started&&hasSave())load();started=true;ov.hidden=true};
-ovR.onclick=()=>{auInit();try{localStorage.removeItem(KEY)}catch(e){}reset();started=true;ov.hidden=true};
+ovR.onclick=()=>{if(meta.total>0&&!confirm('勲章・王の恩恵・周回の記録も全部消えます。本当に最初からやり直しますか？'))return;auInit();try{localStorage.removeItem(KEY)}catch(e){}meta=META0();reset();started=true;ov.hidden=true};
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();auTick();tutTick(dt);requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
-window.__g={encodeSave,decodeSave,get tut(){return tut},save,load,HOLES,get AU(){return AU},get raid(){return raid},get raiders(){return raiders},get dog(){return dog},get stats(){return stats},get mis(){return mis},GATES,KITCHEN,get store(){return store},get vaultN(){return vaultN},get P(){return P},get money(){return money},set money(v){money=v},get lv(){return lv},PADS,SHOPS,nodes,get enemies(){return enemies},get npcs(){return npcs},get pileN(){return pileN},start(){ovB.click()},devPct,get beat(){return beat},BOSSES,get cart(){return cart},recompute,syncNPCs,get playT(){return playT},get trueEnd(){return trueEnd},get stack(){return P.stack},caveDark,hitEnemy,get use3D(){return use3D},costOf};
+window.__g={encodeSave,decodeSave,get tut(){return tut},save,load,HOLES,get AU(){return AU},get raid(){return raid},get raiders(){return raiders},get dog(){return dog},get stats(){return stats},get mis(){return mis},GATES,KITCHEN,get store(){return store},get vaultN(){return vaultN},get P(){return P},get money(){return money},set money(v){money=v},get lv(){return lv},PADS,SHOPS,nodes,get enemies(){return enemies},get npcs(){return npcs},get pileN(){return pileN},start(){ovB.click()},devPct,get beat(){return beat},BOSSES,get cart(){return cart},recompute,syncNPCs,get playT(){return playT},get trueEnd(){return trueEnd},get stack(){return P.stack},caveDark,hitEnemy,get use3D(){return use3D},costOf,get meta(){return meta},travel,gainMedal};
 })();
 </script>
 </body>
