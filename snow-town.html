@@ -33,6 +33,19 @@
   #cfgp button.close{background:#5f6f82}
   #cfgp button:focus-visible,#cfg:focus-visible,#tutc:focus-visible{outline:3px solid #ffd34d;outline-offset:2px}
   #snd{position:fixed;right:84px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;font:inherit;font-size:12px;font-weight:800;color:#fff;background:rgba(10,35,65,.62);border:0;border-radius:14px;padding:7px 12px;cursor:pointer}
+  #auto{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;font:inherit;font-size:13px;font-weight:800;color:#fff;background:rgba(20,120,110,.85);border:0;border-radius:14px;padding:7px 12px;cursor:pointer}
+  #autop{position:fixed;inset:0;z-index:30;background:rgba(10,25,45,.6);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+  #autop[hidden]{display:none}
+  #autop .box{background:#f4f8fc;color:#0e2846;border-radius:16px;padding:16px;width:min(100%,400px);max-height:88vh;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:8px}
+  #autop h2{margin:0;font-size:18px}#autop h3{margin:6px 0 0;font-size:14px}#autop h4{margin:6px 0 0;font-size:12px;color:#4a5d75}
+  #autop .note{margin:0;font-size:12px;color:#4a5d75;line-height:1.5}
+  #autop button{font:inherit;font-size:14px;font-weight:800;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#dfe7ef;color:#0e2846}
+  #autop button.on{background:#1f9d8f;color:#fff}
+  #autop button.close{background:#5f6f82;color:#fff;justify-content:center;margin-top:6px}
+  #autop button .tag{flex:none;font-size:12px;border-radius:8px;padding:2px 8px;background:rgba(0,0,0,.12)}
+  #autop button:disabled{opacity:.55;cursor:default}
+  #autop .list{display:flex;flex-direction:column;gap:6px}
+  #autop button:focus-visible,#auto:focus-visible{outline:3px solid #ffd34d;outline-offset:2px}
   #mode{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;font:inherit;font-size:12px;font-weight:800;color:#fff;background:rgba(10,35,65,.62);border:0;border-radius:14px;padding:7px 12px;cursor:pointer}
 </style>
 </head>
@@ -41,6 +54,18 @@
 <button id="mode" type="button">2D表示</button>
 <button id="snd" type="button">音 ON</button>
 <button id="cfg" type="button" aria-label="設定と引き継ぎ">⚙</button>
+<button id="auto" type="button" hidden>おまかせ</button>
+<div id="autop" hidden>
+  <div class="box">
+    <h2>おまかせ</h2>
+    <button id="oSell" type="button"></button>
+    <button id="oStock" type="button"></button>
+    <h3>強化係にまかせる</h3>
+    <p class="note" id="aNote"></p>
+    <div class="list" id="aList"></div>
+    <button id="aClose" type="button" class="close">閉じる</button>
+  </div>
+</div>
 <div id="tut" hidden><span id="tutn"></span><span id="tutx"></span><button id="tutc" type="button" aria-label="案内を閉じる">×</button></div>
 <div id="cfgp" hidden>
   <div class="box">
@@ -91,7 +116,7 @@ addEventListener('resize',resize);resize();
 if(!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
 
 /* ================= world layout ================= */
-const WW=3400,WH=2960,OW=2400;
+const WW=3400,WH=3090,OW=2400;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const R=(a,b)=>a+Math.random()*(b-a);
@@ -191,6 +216,8 @@ const PADS=[
  {id:'gemarmor',name:'宝石の鎧',x:1110,y:2880,cat:'gold',max:5,cost:l=>({coin:Math.round(5000*Math.pow(1.8,l)),gem:4*(l+1),pelt:20}),req:['goldsmith'],up:true},
  {id:'gstatue',name:'金の像',x:1290,y:2880,cat:'gold',max:5,cost:l=>({coin:Math.round(5000*Math.pow(1.8,l)),gold:30*(l+1),gem:l>=2?3*(l-1):0}),req:['goldsmith'],up:true},
  {id:'cartup',name:'列車の強化',x:1470,y:2880,cat:'gold',max:5,cost:l=>({coin:Math.round(4000*Math.pow(1.7,l)),ore:50*(l+1),log:50*(l+1)}),req:['cart'],up:true},
+ {id:'helper',name:'強化係の小屋',x:750,y:3010,cat:'auto',cost:one({coin:3000,log:100,ore:50}),req:['warehouse','vault'],desc:'強化係が、おまかせした強化を倉庫の素材でやってくれる（左下の「おまかせ」）'},
+ {id:'hireU',name:'強化係を雇う',x:930,y:3010,cat:'auto',max:3,cost:l=>({coin:Math.round(2000*Math.pow(1.8,l)),log:50*(l+1)}),req:['helper'],up:true},
  {id:'lamps',name:'洞窟の灯り',x:1650,y:2880,cat:'gold',max:3,cost:l=>({coin:Math.round(3000*Math.pow(1.6,l)),crystal:10*(l+1),gold:10*(l+1)}),req:['cave'],up:true},
 ];
 for(const p of PADS)p.max=p.base=p.max||1;
@@ -209,8 +236,8 @@ for(const id in CAPT){const p=PADBY0(id),b=CAPT[id],c0=p.cost;
 function PADBY0(id){return PADS.find(p=>p.id===id)}
 let beat={};
 function applyCaps(){for(const p of PADS)p.max=p.base;for(const b of BOSSES)if(beat[b.id])for(const id in b.caps)PADBY0(id).max+=b.caps[id]}
-const CATC={self:['rgba(60,170,120,.28)','#3caa78'],hire:['rgba(60,160,220,.28)','#3ca0dc'],town:['rgba(190,140,60,.3)','#be8c3c'],def:['rgba(210,70,70,.28)','#d24646'],sp:['rgba(150,90,200,.3)','#965ac8'],gold:['rgba(220,180,40,.3)','#d4ac1e']};
-const ROWS=[[2140,'自分の強化'],[2260,'働き手を雇う'],[2380,'町の運営'],[2500,'防衛'],[2630,'特別な建物'],[2760,'資材商'],[2880,'金と宝石']];
+const CATC={self:['rgba(60,170,120,.28)','#3caa78'],hire:['rgba(60,160,220,.28)','#3ca0dc'],town:['rgba(190,140,60,.3)','#be8c3c'],def:['rgba(210,70,70,.28)','#d24646'],sp:['rgba(150,90,200,.3)','#965ac8'],gold:['rgba(220,180,40,.3)','#d4ac1e'],auto:['rgba(40,160,150,.3)','#28a096']};
+const ROWS=[[2140,'自分の強化'],[2260,'働き手を雇う'],[2380,'町の運営'],[2500,'防衛'],[2630,'特別な建物'],[2760,'資材商'],[2880,'金と宝石'],[3010,'おまかせ']];
 const PADBY={};for(const p of PADS)PADBY[p.id]=p;
 const NODEV=['feast','donate'];
 const TOTAL_LV=PADS.reduce((s,p)=>s+(NODEV.includes(p.id)?0:p.base+(CAPT[p.id]?CAPT[p.id].caps[p.id]:0)),0)+BOSSES.length;
@@ -218,12 +245,12 @@ const TOTAL_LV=PADS.reduce((s,p)=>s+(NODEV.includes(p.id)?0:p.base+(CAPT[p.id]?C
 const SHOPS=[
  {id:'market',name:'市場',type:'meat',x:1000,y:1530,side:-1,req:null,stock:0,cap:60,buyT:0,awn:'#e04646',pile:'pmk',extra:{type:'fish',n:0,cap:60}},
  {id:'peltshop',name:'毛皮屋',type:'pelt',x:1400,y:1530,side:1,req:'peltshop',stock:0,cap:30,buyT:0,awn:'#3f78c4',pile:'ppe'},
- {id:'kitchen',name:'料理屋',type:'stew',x:1210,y:1830,side:1,req:'kitchen',stock:0,cap:20,buyT:0,awn:'#2d8c5a',pile:'pkt',q:{x:1285,y:1960,dx:0,dy:32},ing:{meat:0,fish:0,log:0},cookT:0},
+ {id:'kitchen',name:'料理屋',type:'stew',x:1210,y:1830,side:1,req:'kitchen',stock:0,cap:20,buyT:0,awn:'#2d8c5a',pile:'pkt',q:{x:1300,y:1850,dx:0,dy:-30,sy:-230},ing:{meat:0,fish:0,log:0},cookT:0},
  {id:'trade',name:'交易所',type:'crystal',x:1500,y:2000,side:1,req:'trade',stock:0,cap:40,buyT:0,awn:'#7a4fb0',pile:'ptr',extra:{type:'ore',n:0,cap:300}},
  {id:'goldsmith',name:'金細工屋',type:'gem',x:2650,y:780,side:-1,req:'goldsmith',stock:0,cap:30,buyT:0,awn:'#d4ac1e',pile:'pgs',extra:{type:'gold',n:0,cap:120}},
 ];
-for(const s of SHOPS)s.drop={x:s.x,y:s.y+90};
-SHOPS[3].drop={x:1400,y:1985};
+for(const s of SHOPS){s.drop={x:s.x,y:s.y+90};s.cap0=s.cap;if(s.extra)s.extra.cap0=s.extra.cap}
+SHOPS[3].drop={x:1425,y:1990};
 const shopTypes=s=>s.extra?[s.type,s.extra.type]:[s.type];
 const shopN=(s,k)=>k===s.type?s.stock:s.extra.n;
 const shopCap=(s,k)=>k===s.type?s.cap:s.extra.cap;
@@ -241,9 +268,10 @@ const PILES=[
  {id:'pgd',x:3080,y:900,type:'gold',req:'cart'},
  {id:'pgm',x:3170,y:900,type:'gem',req:'cart'},
 ];
-const STORE_T=['log','ore','pelt','meat','fish','crystal'];
+const STORE_T=['log','ore','pelt','meat','fish','crystal','gold','gem'];
 const DEPO={x:1000,y:1890};
-const WDZ=STORE_T.map((type,i)=>({type,x:740+i*90,y:1995}));
+const WDZ=STORE_T.map((type,i)=>({type,x:735+i*82,y:1995}));
+const inWDZ=z=>Math.abs(P.x-z.x)<30&&Math.abs(P.y-z.y)<26;
 const VZ={x:1400,y:1890};
 const BUYP={log:10,ore:14,pelt:40,meat:18,fish:20,crystal:220};
 const BZ=Object.keys(BUYP).map((type,i)=>({type,x:740+i*95,y:2760}));
@@ -380,14 +408,15 @@ const isBearish=t=>t==='bear'||t==='polar'||t==='kbear'||t==='kpolar';
 const isGolem=t=>t==='golem'||t==='kgolem';
 
 /* ================= state ================= */
-let playT=0,cart=null,shake=0,trueEnd=false,tut=0,tutT=0,sellT=0,deliv=0,dlvIn=false,buyT=0,feastT=0,stats,mis,misBase,raid,raiders,arrows,dog,store,vaultN,P,money,lv,paid,enemies,items,flyers,parts,texts,customers,npcs,pileN,crate,crateT,t=0,toastT=0,toastMsg='',started=false,won=false,saveT=0;
+let opt={sell:true,stock:true},autoUp={},playT=0,cart=null,shake=0,trueEnd=false,tut=0,tutT=0,sellT=0,deliv=0,dlvIn=false,buyT=0,feastT=0,stats,mis,misBase,raid,raiders,arrows,dog,store,vaultN,P,money,lv,paid,enemies,items,flyers,parts,texts,customers,npcs,pileN,crate,crateT,t=0,toastT=0,toastMsg='',started=false,won=false,saveT=0;
 let arrowDmg,arrowInt,storeCap,dmg,atkInt,cap,speed,priceMult,meatPrice,peltPrice;
 const built=id=>lv[id]>=1;
 function recompute(){
   const a=lv.axe;dmg=1+a+2*lv.iceaxe+3*lv.gemaxe;atkInt=.45*Math.pow(.9,a)*Math.pow(.92,lv.iceaxe);
   cap=8+4*lv.bag;speed=215*(1+.08*lv.boots);
   const mh=10+6*lv.coat+15*lv.gemarmor;if(P){P.hp=Math.min(mh,P.hp+(mh-P.maxHp));P.maxHp=mh}
-  storeCap=60+60*lv.whup;arrowDmg=Math.round(2+1.5*lv.arrow);arrowInt=1.1*Math.pow(.88,lv.arrow);
+  storeCap=60+60*lv.whup;for(const s of SHOPS){s.cap=Math.round(s.cap0*(1+.5*lv.whup));if(s.extra)s.extra.cap=Math.round(s.extra.cap0*(1+.5*lv.whup))}
+ arrowDmg=Math.round(2+1.5*lv.arrow);arrowInt=1.1*Math.pow(.88,lv.arrow);
   for(const g of GATES){g.max=30+35*lv.gateup;if(!raid||!raid.active)g.hp=g.max}
   priceMult=(1+.25*lv.sign+.15*lv.statue+.1*lv.gstatue)*(1+.1*lv.rank);meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
 }
@@ -403,11 +432,11 @@ function spawnEnemy(type,far,zk){
 }
 function reset(){
   P={x:1200,y:1560,face:1,stack:[],hp:10,maxHp:10,atkT:0,hurtT:0,lastHit:9,swing:0,walk:0,moving:false};
-  money=0;won=false;trueEnd=false;playT=0;cart=null;beat={};applyCaps();lv={};paid={};for(const p of PADS){lv[p.id]=0;paid[p.id]=ZP()}
+  money=0;won=false;trueEnd=false;opt={sell:true,stock:true};autoUp={};playT=0;cart=null;beat={};applyCaps();lv={};paid={};for(const p of PADS){lv[p.id]=0;paid[p.id]=ZP()}
   enemies=[];for(const k in ET)for(let i=0;i<ET[k].n;i++)enemies.push(spawnEnemy(k,false));
   items=[];flyers=[];parts=[];texts=[];npcs=[];pileN={};for(const p of PILES)pileN[p.id]=0;
   for(const s of SHOPS){s.stock=0;s.buyT=0;if(s.extra)s.extra.n=0}
-  customers=[];crate=null;crateT=40;store={log:0,ore:0,pelt:0,meat:0,fish:0,crystal:0};vaultN=0;
+  customers=[];crate=null;crateT=40;store={log:0,ore:0,pelt:0,meat:0,fish:0,crystal:0,gold:0,gem:0};vaultN=0;
   deliv=0;tut=0;tutT=0;stats={};mis=0;misBase=0;raid={active:false,t:null,no:0,stolen:0};raiders=[];arrows=[];dog=null;KITCHEN.ing={meat:0,fish:0,log:0};KITCHEN.cookT=0;for(const h of HOLES)h.cd=0;
   for(const n of nodes){n.alive=true;n.hp=n.max}
   recompute();
@@ -416,9 +445,9 @@ const shopOpen=s=>!s.req||built(s.req);
 const pileOn=p=>!p.req||built(p.req);
 function syncNPCs(){
   const want={lumber:(built('lumber')?1:0)+lv.hireL,hunter:(built('hunter')?1:0)+lv.hireH,miner:(built('minehut')?1:0)+lv.hireM,
-    trapper:(built('trapper')?1:0)+lv.hireT,guard:(built('guardhouse')?2:0)+lv.hireG,polarh:(built('polarhut')?1:0)+lv.hireB,fisher:(built('fisher')?1:0)+lv.hireF,porter:(built('warehouse')?1:0)+lv.hireP,collector:(built('vault')?1:0)+lv.hireC};
+    trapper:(built('trapper')?1:0)+lv.hireT,guard:(built('guardhouse')?2:0)+lv.hireG,polarh:(built('polarhut')?1:0)+lv.hireB,fisher:(built('fisher')?1:0)+lv.hireF,porter:(built('warehouse')?1:0)+lv.hireP,collector:(built('vault')?1:0)+lv.hireC,helper:(built('helper')?1:0)+lv.hireU};
   if(built('doghouse')&&!dog)dog={x:PADBY.doghouse.x,y:PADBY.doghouse.y+40,carry:[],tg:null,walk:0,face:1};
-  const HOME={lumber:'lumber',hunter:'hunter',miner:'minehut',trapper:'trapper',guard:'guardhouse',polarh:'polarhut',fisher:'fisher',porter:'warehouse',collector:'vault'};
+  const HOME={lumber:'lumber',hunter:'hunter',miner:'minehut',trapper:'trapper',guard:'guardhouse',polarh:'polarhut',fisher:'fisher',porter:'warehouse',collector:'vault',helper:'helper'};
   for(const k in want){
     const home=PADBY[HOME[k]];
     while(npcs.filter(n=>n.kind===k).length<want[k])npcs.push({kind:k,x:home.x+R(-20,20),y:home.y+50,state:'seek',tg:null,atkT:0,walk:0,face:1,swing:0,carry:0});
@@ -431,8 +460,10 @@ function saveData(){
   // things being carried are saved where they were heading, so nothing is lost on reload
   const pn=Object.assign({},pileN),st=Object.assign({},store),stock=SHOPS.map(s=>s.stock),ex=SHOPS.map(s=>s.extra?s.extra.n:0),ing=Object.assign({},KITCHEN.ing);let vn=vaultN;
   const HP={lumber:'plog',miner:'pore',trapper:'ppl'};
+  let hc=0;
   for(const n of npcs){
-    if(n.kind==='collector')vn+=n.cash||0;
+    if(n.kind==='helper'){if(n.load)for(const k in n.load){if(k==='coin')hc+=n.load[k];else st[k]+=n.load[k]}}
+    else if(n.kind==='collector')vn+=n.cash||0;
     else if(n.kind==='polarh'){}
     else if(!n.carry)continue;
     else if(HP[n.kind])pn[HP[n.kind]]+=n.carry;
@@ -442,7 +473,7 @@ function saveData(){
     else if(n.kind==='porter'){if(n.state==='retk')ing[n.ctype==='log'?'log':n.ctype]+=n.carry;else st[n.ctype]+=n.carry}
   }
   const stack=P.stack.concat(dog?dog.carry:[]);
-  return JSON.stringify({money,lv,paid,stock,ex,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,tut,beat,pt:Math.round(playT),v:2,ts:Date.now()});
+  return JSON.stringify({money:money+hc,lv,paid,stock,ex,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,tut,beat,opt,autoUp,pt:Math.round(playT),v:2,ts:Date.now()});
 }
 function save(){try{localStorage.setItem(KEY,saveData())}catch(e){}}
 const encodeSave=()=>btoa(unescape(encodeURIComponent(saveData())));
@@ -451,7 +482,7 @@ function load(dd){
   try{
     const d=dd||JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return false;
     reset();
-    beat=Object.assign({},d.beat||{});applyCaps();playT=d.pt||0;trueEnd=!!beat.giant;
+    beat=Object.assign({},d.beat||{});applyCaps();opt=Object.assign({sell:true,stock:true},d.opt||{});autoUp=Object.assign({},d.autoUp||{});playT=d.pt||0;trueEnd=!!beat.giant;
     for(const id in d.lv||{})if(id in lv)lv[id]=d.lv[id];
     for(const id in d.paid||{})if(id in paid)paid[id]=Object.assign(ZP(),d.paid[id]);
     money=d.money||0;(d.stock||[]).forEach((n,i)=>{if(SHOPS[i])SHOPS[i].stock=n});(d.ex||[]).forEach((n,i)=>{if(SHOPS[i]&&SHOPS[i].extra)SHOPS[i].extra.n=n});
@@ -504,7 +535,7 @@ function levelUp(p){
   if(p.up)addText(p.x,p.y-60,p.name+' Lv'+lv[p.id]+'！','#ffd34d');
   else{addText(p.x,p.y-90,p.fence?'開拓！':p.name+' 完成！','#ffd34d');toast(p.name+'：'+p.desc)}
   if(p.up){
-    const d={tools:'働き手の足が速くなり、たくさん運べるようになった',rank:'町の格が上がった：「'+RANKN[lv.rank]+'」 売値・家賃 +'+(10*lv.rank)+'%',donate:'勲章をもらった（'+lv.donate+'個）',axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍',
+    const d={tools:'働き手の足が速くなり、たくさん運べるようになった',rank:'町の格が上がった：「'+RANKN[lv.rank]+'」 売値・家賃 +'+(10*lv.rank)+'%',donate:'勲章をもらった（'+lv.donate+'個）',axe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,iceaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,hireG:'自警団が増えた',guardup:`自警団の攻撃力 ${gPow()}`,bag:`持てる数 ${cap}`,boots:'移動が速くなった',coat:`体力 ${P.maxHp}`,sign:`肉 ${meatPrice} / 毛皮 ${peltPrice} コイン`,hireL:'木こりが増えた',hireH:'狩人が増えた',hireM:'鉱夫が増えた',hireT:'罠師が増えた',hireP:'運搬係が増えた',hireC:'集金係が増えた',whup:`倉庫の容量 ${storeCap}・お店の棚も広がった`,hireF:'漁師が増えた',iceaxe:`攻撃力 ${dmg}`,arrow:`矢の威力 ${arrowDmg}`,gateup:`門の耐久 ${GATES[0].max}`,dogup:'犬がたくさん運べる',chef:'料理が速くなった',statue:`売値と家賃 +${15*lv.statue}%`,feast:'2分間 売値・家賃1.5倍',
       torch:'洞窟で見える範囲が広がった',gemaxe:`攻撃力 ${dmg}（働き手・自警団も強くなる）`,gemarmor:`体力 ${P.maxHp}・受けるダメージ -${10*lv.gemarmor}%`,gstatue:`売値と家賃 +${10*lv.gstatue}%`,cartup:'列車がたくさん運ぶようになった',lamps:'洞窟に灯りがともった'}[p.id]||'';
     toast(p.name+' Lv'+lv[p.id]+'：'+d);
   }
@@ -536,10 +567,14 @@ function deliver(n,res,shop,sx,sy,sp,dt,pile){
     else if(n.dest==='shop'){const k=Math.min(n.carry,shopCap(shop,res)-shopN(shop,res));shopAdd(shop,res,k);n.carry-=k}
     else if(pile){const k=Math.min(n.carry,Math.max(0,PILECAP-pileN[pile.id]));pileN[pile.id]+=k;n.carry-=k}
     n.dest=null;if(n.carry<=0){n.carry=0;return true}
+    const room=(!!shop&&shopOpen(shop)&&shopN(shop,res)<shopCap(shop,res))||(built('warehouse')&&store[res]<storeCap)||(!!pile&&pileN[pile.id]<PILECAP);
+    if(!room&&autoSell(res,n.carry,n.x,n.y)){n.carry=0;return true}
   }
   return false;
 }
 const PILECAP=120;
+// warehouse, shop and pile all full: sell the rest at the sell-off price (can be turned off in the おまかせ panel)
+function autoSell(k,n,x,y){if(!opt.sell||n<=0)return false;const g=(SELLP[k]||1)*n;money+=g;stat('autosold',g);if(Math.random()<.4)addText(x,y-60,'+'+g,'#ffd34d');return true}
 function walkVia(o,x,y,sp,dt){
   if(o!==P&&o!==dog)sp*=1+.08*(lv.tools||0);
   if(built('hotspring'))sp*=1.3;
@@ -692,7 +727,7 @@ function update(dt){
       if(s.buyT>.5){s.buyT=0;const k=Math.min(shopN(s,bt),(bt==='ore'?5:bt==='gold'?3:1)+Math.floor(lv.sign/2));shopAdd(s,bt,-k);f.out=true;f.carry=bt;stat('sold_'+bt,k);const g=priceOf(bt)*k;pileN[s.pile]+=g;if(s.id==='trade')stat('trade_coin',g);addText(s.x+s.side*50,s.y-40,'+'+g,'#ffd34d');sfx('sell',.12)}
     }
     const qn=s.id==='kitchen'||s.id==='trade'||s.id==='goldsmith'?4:6;
-    while(customers.filter(c=>c.shop===s&&!c.out).length<qn){const hx=s.q?s.q.x+R(-10,10):s.x+s.side*R(70,130),hy=s.q?s.q.y+150:s.y+250;puff(hx,hy,6,'#ffffff');customers.push({shop:s,hx,hy,x:hx,y:hy,col:CCOL[Math.floor(Math.random()*CCOL.length)],out:false,walk:Math.random()*6,carry:null})}
+    while(customers.filter(c=>c.shop===s&&!c.out).length<qn){const hx=s.q?s.q.x+R(-10,10):s.x+s.side*R(70,130),hy=s.q?s.q.y+(s.q.sy||150):s.y+250;puff(hx,hy,6,'#ffffff');customers.push({shop:s,hx,hy,x:hx,y:hy,col:CCOL[Math.floor(Math.random()*CCOL.length)],out:false,walk:Math.random()*6,carry:null})}
   }
   for(const c of customers)if(c.out){if(walkTo(c,c.hx+c.shop.side*30,c.hy,110,dt)<6){c.gone=true;puff(c.x,c.y-10,6,'#ffffff')}}
   customers=customers.filter(c=>!c.gone);
@@ -711,7 +746,7 @@ function update(dt){
     if(Math.hypot(P.x-DEPO.x,P.y-DEPO.y)<50){
       wT+=dt;
       while(wT>.05&&P.stack.length){wT-=.05;let ok=false;for(let i=P.stack.length-1;i>=0;i--){const k=P.stack[i];if(store[k]<storeCap){store[k]++;P.stack.splice(i,1);flyTo(P.x,P.y-50,DEPO.x,DEPO.y-60,k);ok=true;break}}if(!ok){wT=0;break}}
-    }else for(const z of WDZ)if(Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26){
+    }else for(const z of WDZ)if(inWDZ(z)){
       wT+=dt;while(wT>.06&&store[z.type]>0&&P.stack.length<cap){wT-=.06;store[z.type]--;P.stack.push(z.type);fly(z.x,z.y-10,z.type)}
     }
   }
@@ -777,7 +812,7 @@ function update(dt){
         else walkVia(n,PADBY.polarhut.x+40,PADBY.polarhut.y+50,90,dt);
       }else{
         const tx=built('warehouse')?DEPO.x-40:PADBY.polarhut.x,ty=built('warehouse')?DEPO.y:PADBY.polarhut.y+60;
-        if(walkVia(n,tx,ty,135,dt)<8){for(const k in n.bag){let v=n.bag[k];if(built('warehouse')){const a=Math.min(v,storeCap-store[k]);store[k]+=a;v-=a}for(let i=0;i<v;i++)dropItem(n.x,n.y,k)}n.bag=null;n.state='seek';n.tg=null}
+        if(walkVia(n,tx,ty,135,dt)<8){for(const k in n.bag){let v=n.bag[k];if(built('warehouse')){const a=Math.min(v,storeCap-store[k]);store[k]+=a;v-=a}if(!autoSell(k,v,n.x,n.y))for(let i=0;i<v;i++)dropItem(n.x,n.y,k)}n.bag=null;n.state='seek';n.tg=null}
       }
       n.carry=n.bag?Math.min(8,Object.values(n.bag).reduce((a,b)=>a+b,0)):0;
     }else if(n.kind==='porter'){
@@ -790,18 +825,21 @@ function update(dt){
       else if(n.state==='retk'){if(walkTo(n,K.drop.x,K.drop.y,130,dt)<8){K.ing[n.ctype]+=n.carry;n.carry=0;n.state='seek'}}
       else if(n.state==='seek'){
         if(!n.tg||pileN[n.tg.id]<=0){let bn=0;n.tg=null;for(const p of PILES)if(p.type!=='coin'&&pileOn(p)&&pileN[p.id]>bn&&(store[p.type]<storeCap||(p.type==='ore'&&built('trade')))&&!npcs.some(o=>o!==n&&o.tg===p)){bn=pileN[p.id];n.tg=p}}
-        if(n.tg){if(walkTo(n,n.tg.x,n.tg.y+14,130,dt)<8){const PC=20+5*lv.tools,k=Math.min(pileN[n.tg.id],PC,Math.max(n.tg.type==='ore'&&built('trade')?PC:0,storeCap-store[n.tg.type]));pileN[n.tg.id]-=k;n.carry=k;n.ctype=n.tg.type;n.state='ret';n.tg=null}}
-        else walkTo(n,DEPO.x+60,DEPO.y-10,90,dt);
-      }else{const ps=n.ctype==='ore'?SHOPS[3]:SHOPS[1],sell=(n.ctype==='pelt'&&shopOpen(ps)&&ps.stock<ps.cap)||(n.ctype==='ore'&&shopOpen(ps)&&store.ore>=storeCap*.8&&ps.extra.n<ps.extra.cap);
-        if(walkTo(n,sell?ps.x-60:DEPO.x+30,sell?ps.y+45:DEPO.y,130,dt)<8){if(sell){const k=Math.min(n.carry,shopCap(ps,n.ctype)-shopN(ps,n.ctype));shopAdd(ps,n.ctype,k);n.carry-=k;if(n.carry>0){store[n.ctype]=Math.min(storeCap,store[n.ctype]+n.carry)}}else store[n.ctype]=Math.min(storeCap,store[n.ctype]+n.carry);n.carry=0;n.state='seek'}}
+        if(n.tg){if(walkVia(n,n.tg.x,n.tg.y+14,130,dt)<8){const PC=20+5*lv.tools,k=Math.min(pileN[n.tg.id],PC,Math.max(n.tg.type==='ore'&&built('trade')?PC:0,storeCap-store[n.tg.type]));pileN[n.tg.id]-=k;n.carry=k;n.ctype=n.tg.type;n.state='ret';n.tg=null}}
+        else if(!porterStock(n))walkVia(n,DEPO.x+60,DEPO.y-10,90,dt);
+      }else if(n.state==='getS'){if(walkVia(n,DEPO.x+30,DEPO.y,130,dt)<8){const s0=n.shopT,k=Math.max(0,Math.min(20+5*lv.tools,store[n.ctype]-Math.floor(storeCap*.3),shopCap(s0,n.ctype)-shopN(s0,n.ctype)));store[n.ctype]-=k;n.carry=k;n.state=k?'retS':'seek';if(!k)n.shopT=null}}
+      else if(n.state==='retS'){const s0=n.shopT;if(walkVia(n,s0.drop.x,s0.drop.y,130,dt)<8){const k=Math.min(n.carry,shopCap(s0,n.ctype)-shopN(s0,n.ctype));shopAdd(s0,n.ctype,k);n.carry-=k;if(n.carry>0){const a=Math.min(n.carry,storeCap-store[n.ctype]);store[n.ctype]+=a;autoSell(n.ctype,n.carry-a,n.x,n.y)}n.carry=0;n.state='seek';n.shopT=null}}
+      else{const ps=n.ctype==='ore'?SHOPS[3]:SHOPS[1],sell=(n.ctype==='pelt'&&shopOpen(ps)&&ps.stock<ps.cap)||(n.ctype==='ore'&&shopOpen(ps)&&store.ore>=storeCap*.8&&ps.extra.n<ps.extra.cap);
+        if(walkVia(n,sell?ps.x-60:DEPO.x+30,sell?ps.y+45:DEPO.y,130,dt)<8){if(sell){const k=Math.min(n.carry,shopCap(ps,n.ctype)-shopN(ps,n.ctype));shopAdd(ps,n.ctype,k);n.carry-=k}const a=Math.min(n.carry,storeCap-store[n.ctype]);store[n.ctype]+=a;autoSell(n.ctype,n.carry-a,n.x,n.y);n.carry=0;n.state='seek'}}
     }else if(n.kind==='collector'){
       if(n.state==='seek'){
         if(!n.tg||pileN[n.tg.id]<=0){let bn=4;n.tg=null;for(const p of PILES)if(p.type==='coin'&&pileOn(p)&&pileN[p.id]>bn&&!npcs.some(o=>o!==n&&o.tg===p)){bn=pileN[p.id];n.tg=p}}
-        if(n.tg){if(walkTo(n,n.tg.x,n.tg.y+14,140,dt)<8){n.cash=(n.cash||0)+pileN[n.tg.id];pileN[n.tg.id]=0;n.tg=null;if(n.cash>=60||!PILES.some(p=>p.type==='coin'&&pileOn(p)&&pileN[p.id]>4))n.state='ret'}}
+        if(n.tg){if(walkVia(n,n.tg.x,n.tg.y+14,140,dt)<8){n.cash=(n.cash||0)+pileN[n.tg.id];pileN[n.tg.id]=0;n.tg=null;if(n.cash>=60||!PILES.some(p=>p.type==='coin'&&pileOn(p)&&pileN[p.id]>4))n.state='ret'}}
         else if(n.cash>0)n.state='ret';else walkTo(n,VZ.x+60,VZ.y-10,90,dt);
-      }else if(walkTo(n,VZ.x+30,VZ.y,140,dt)<8){vaultN+=n.cash;n.cash=0;n.state='seek'}
+      }else if(walkVia(n,VZ.x+30,VZ.y,140,dt)<8){vaultN+=n.cash;n.cash=0;n.state='seek'}
       n.carry=n.cash>0?Math.min(4,Math.ceil(n.cash/20)):0;
-    }else{
+    }else if(n.kind==='helper')helperTick(n,dt);
+    else{
       const mk=SHOPS[0];
       if(n.state==='seek'){
         if(!n.tg||!n.tg.alive||!enemies.includes(n.tg)){let bd=1e9;n.tg=null;for(const e of enemies)if(e.alive&&e.type==='bear'&&!npcs.some(o=>o!==n&&o.tg===e)){const d=Math.hypot(e.x-n.x,e.y-n.y);if(d<bd){bd=d;n.tg=e}}}
@@ -879,7 +917,10 @@ function update(dt){
     else{cart.y+=cart.dir*90*(1+.2*lv.cartup)*dt;
       if(cart.dir>0&&cart.y>=RAIL1){cart.y=RAIL1;cart.dir=-1;cart.wait=3;cart.load=6+3*lv.cartup;cart.gem=Math.random()<.3+.1*lv.cartup?1+Math.floor(lv.cartup/2):0}
       else if(cart.dir<0&&cart.y<=RAIL0){cart.y=RAIL0;cart.dir=1;cart.wait=2.5;
-        for(const[id,k]of[['pgd','load'],['pgm','gem']])if(cart[k]){const p=PILES.find(q=>q.id===id);pileN[id]=Math.min(PILECAP,pileN[id]+cart[k]);flyTo(CAVEX,RAIL0-20,p.x,p.y,id==='pgd'?'gold':'gem')}
+        // straight to the warehouse; what does not fit waits at the station piles
+        for(const[id,k,ty]of[['pgd','load','gold'],['pgm','gem','gem']])if(cart[k]){let v=cart[k];
+          if(built('warehouse')){const a=Math.min(v,storeCap-store[ty]);store[ty]+=a;v-=a;if(a)addText(CAVEX,RAIL0-40,`倉庫へ ${RES_NAME[ty]}+${a}`,'#ffe27a')}
+          const p=PILES.find(q=>q.id===id),b=Math.min(v,PILECAP-pileN[id]);if(b){pileN[id]+=b;v-=b;flyTo(CAVEX,RAIL0-20,p.x,p.y,ty)}autoSell(ty,v,CAVEX,RAIL0)}
         cart.load=cart.gem=0}}
   }
 
@@ -920,6 +961,43 @@ function hitEnemy(e,d,byPlayer){
     if(isR){stat('raider');if(e.type==='alpha'){for(const k in cf.drop)for(let i=0;i<cf.drop[k];i++)dropItem(e.x,e.y,k);toast('大狼を倒した！')}const g=Math.round((3+raid.no)*(raid.mult||1)*(e.type==='alpha'?5:1));money+=g;addText(e.x,e.y-40,'+'+g,'#ffd34d');flyTo(e.x,e.y-20,P.x,P.y-40,'coin')}
   }
 }
+/* ================= おまかせ: shop restocking and the upgrade helper ================= */
+// porter: when the warehouse has plenty of something and a shop shelf is low, carry it over
+function porterStock(n){
+  if(!opt.stock||!built('warehouse'))return false;
+  for(const s0 of SHOPS){if(s0.ing||!shopOpen(s0))continue;
+    for(const k of shopTypes(s0)){if(k==='ore')continue;
+      if(store[k]>=Math.max(8,storeCap*.5)&&shopN(s0,k)<shopCap(s0,k)*.6&&!npcs.some(o=>o!==n&&o.shopT===s0&&o.ctype===k)){n.shopT=s0;n.ctype=k;n.state='getS';n.tg=null;return true}}}
+  return false;
+}
+function helperNeed(p){const need=costOf(p),pd=paid[p.id],o={};for(const k in need){const r=need[k]-pd[k];if(r>0)o[k]=r}return o}
+function helperCan(p){const o=helperNeed(p);for(const k in o)if(k==='coin'?money<o[k]:(store[k]||0)<o[k])return false;return true}
+const helperOk=p=>autoUp[p.id]&&visible(p)&&!p.fence&&!(p.id==='feast'&&feastT>0);
+function helperBack(n){if(!n.load)return;for(const k in n.load){const v=n.load[k];if(!v)continue;if(k==='coin')money+=v;else{const a=Math.min(v,storeCap-store[k]);store[k]+=a;autoSell(k,v-a,n.x,n.y)}}n.load=null}
+// upgrade helper: picks a pad you marked, takes what it still needs from the warehouse (coins from your purse) and pays it there
+function helperTick(n,dt){
+  const H=PADBY.helper;
+  if(n.state==='seek'){
+    let best=null,bv=1e18;
+    if(built('warehouse'))for(const p of PADS)if(helperOk(p)&&!npcs.some(o=>o!==n&&o.tg===p)&&helperCan(p)){const c=helperNeed(p);let v=c.coin||0;for(const k in c)if(k!=='coin')v+=c[k]*SELLP[k]*2;if(v<bv){bv=v;best=p}}
+    if(best){n.tg=best;n.state='getU'}else walkVia(n,H.x+50+(npcs.indexOf(n)%3)*20,H.y+50,90,dt);
+  }else if(n.state==='getU'){
+    if(walkVia(n,DEPO.x+20,DEPO.y-10,160,dt)<10){
+      const p=n.tg;if(!helperOk(p)||!helperCan(p)){n.state='seek';n.tg=null;return}
+      n.load=helperNeed(p);for(const k in n.load){if(k==='coin')money-=n.load[k];else store[k]-=n.load[k]}
+      n.ctype=Object.keys(n.load).find(k=>k!=='coin')||'coin';n.state='payU';
+    }
+  }else{
+    const p=n.tg;
+    if(walkVia(n,p.x,p.y+30,160,dt)<12){
+      if(visible(p)){const pd=paid[p.id],need=costOf(p);for(const k in n.load){const a=Math.min(n.load[k],Math.max(0,(need[k]||0)-pd[k]));pd[k]+=a;n.load[k]-=a}puff(p.x,p.y,10,'#ffd34d');
+        if(Object.keys(need).every(k=>pd[k]>=need[k])){levelUp(p);p.lock=false}}
+      helperBack(n);n.state='seek';n.tg=null;
+    }
+  }
+  n.carry=n.load?Math.min(6,Object.keys(n.load).length*2):0;
+}
+
 /* ================= bosses & telegraphed attacks ================= */
 const RAIL0=800,RAIL1=2180;
 function syncBosses(){
@@ -1181,6 +1259,7 @@ function drawBuilding(p){
     case 'lighthouse':shadow(x,y,30);ctx.fillStyle='#d7e3ee';ctx.fillRect(x-14,y-110,28,110);ctx.fillStyle='#e04646';ctx.fillRect(x-14,y-80,28,14);ctx.fillRect(x-14,y-40,28,14);
       ctx.globalAlpha=.35+Math.sin(t*4)*.2;ell(x,y-122,40,26,'#9fe6ff');ctx.globalAlpha=1;crystalIcon(x,y-124,1.6);txt('氷の灯台',x,y-150,12,'#fff');break;
     case 'hunter':house(x,y,80,48,'#7d6a4f','#3d6b3a','狩人小屋');break;
+    case 'helper':house(x,y,84,48,'#9c7a55','#1f9d8f','強化係の小屋');ctx.fillStyle='#555';ctx.fillRect(x+30,y-30,14,6);ctx.fillStyle='#7a4f28';ctx.fillRect(x+35,y-26,4,16);break;
     case 'cart':shadow(x,y,60);ctx.fillStyle='#8a5a2f';ctx.fillRect(x-60,y-14,120,14);for(const a of[-52,46])ctx.fillRect(x+a,y-74,6,60);
       poly([x-70,y-72,x+70,y-72,x+56,y-96,x-56,y-96],'#4a5560');poly([x-60,y-88,x+60,y-88,x+56,y-96,x-56,y-96],'#f6fbff');txt('鉱山列車の駅',x,y-110,12,'#fff');break;
     case 'minehut':house(x,y,80,48,'#7b858f','#4a5560','鉱夫小屋');break;
@@ -1189,7 +1268,7 @@ function drawBuilding(p){
       house(x,y,130,56,'#9b6d43','#5d6f80','');
       ctx.fillStyle='#5a3a20';ctx.fillRect(x-22,y-40,44,40);ctx.strokeStyle='#c9935a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-22,y-40);ctx.lineTo(x+22,y);ctx.moveTo(x+22,y-40);ctx.lineTo(x-22,y);ctx.stroke();
       txt('倉庫',x,y-104,14,'#fff');
-      STORE_T.forEach((k,i)=>{const cx=x-62+i*40;itemIcon(k,cx,y-128,.85);txt(String(store[k]),cx+14,y-128,11,store[k]>=storeCap?'#ff8a8a':'#fff','left')});
+      STORE_T.forEach((k,i)=>{const cx=x-STORE_T.length*23+9+i*46;itemIcon(k,cx,y-128,.85);txt(String(store[k]),cx+14,y-128,11,store[k]>=storeCap?'#ff8a8a':'#fff','left')});
       break;
     case 'vault':
       shadow(x,y,46);ctx.fillStyle='#6d7680';ctx.fillRect(x-40,y-60,80,60);ctx.fillStyle='#8c96a1';ctx.fillRect(x-44,y-66,88,10);
@@ -1319,7 +1398,9 @@ function drawPad(p){
   ctx.restore();
   txt(padName(p),p.x,p.y-22,p.name.length>6?11:13,'#fff');
   costRow(p.x,p.y+10,need,pd,w-10);
+  if(autoUp[p.id])autoTag(p.x,p.y+31);
 }
+function autoTag(x,y){ctx.fillStyle='rgba(31,157,143,.95)';ctx.beginPath();ctx.roundRect(x-28,y-8,56,16,8);ctx.fill();txt('まかせ中',x,y,10,'#fff','center',null)}
 function padName(p){if(p.id==='donate')return `王国へ献上（勲章${lv.donate}）`;if(p.id==='rank')return `町の格上げ（${RANKN[Math.min(10,lv.rank+1)]}へ）`;if(p.id==='feast')return feastT>0?`宴会中 ${Math.floor(feastT/60)}:${String(Math.floor(feastT%60)).padStart(2,'0')}`:p.name;return p.up?`${p.name} Lv${lv[p.id]+1}`:p.name}
 function costRow(cx,cy,need,pd,maxW){
   const ks=Object.keys(need),fs=ks.length>2?12:14;ctx.font=`900 ${fs}px ${FONT}`;
@@ -1416,7 +1497,7 @@ function render2D(){
   {
     if(built('warehouse')){
       zone(DEPO.x,DEPO.y,96,52,Math.hypot(P.x-DEPO.x,P.y-DEPO.y)<50);txt('預ける',DEPO.x,DEPO.y,14,'#fff');
-      for(const z of WDZ){zone(z.x,z.y,72,52,Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26);itemIcon(z.type,z.x,z.y-8,1);txt('取出',z.x,z.y+13,10,'#fff')}
+      for(const z of WDZ){zone(z.x,z.y,70,52,inWDZ(z));itemIcon(z.type,z.x,z.y-8,1);txt('取出',z.x,z.y+13,10,'#fff')}
     }
     if(built('vault')){zone(VZ.x,VZ.y,96,52,Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);coinIcon(VZ.x-22,VZ.y,9);txt('受け取る',VZ.x+10,VZ.y,12,'#fff')}
     if(built('warehouse')){zone(SELLZ.x,SELLZ.y,68,52,Math.abs(P.x-SELLZ.x)<34&&Math.abs(P.y-SELLZ.y)<26);txt('売り払う',SELLZ.x,SELLZ.y-9,11,'#fff');txt('半値',SELLZ.x,SELLZ.y+9,10,'#ffd34d')}
@@ -1445,7 +1526,7 @@ function render2D(){
   for(const p of PILES)if(pileOn(p))L.push([p.y,()=>drawPile(p)]);
   for(const sg of fenceSegs()){const[x0,y0,x1,y1]=sg,len=Math.hypot(x1-x0,y1-y0),n=Math.floor(len/26);for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n;if(inV(x,y))L.push([y,()=>{ctx.fillStyle='#7a4f2a';ctx.fillRect(x-5,y-34,10,34);poly([x-5,y-34,x+5,y-34,x,y-42],'#7a4f2a');ell(x,y-38,5,3,'#fff')}])}}
   for(const c of customers)if(inV(c.x,c.y))L.push([c.y,()=>person(c.x,c.y,c.col,{moving:true,walk:c.walk,face:c.out?c.shop.side:-c.shop.side,carry:c.carry?1:0,carryType:c.carry})]);
-  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],guard:['#a33a3a','spear',null],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
+  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],guard:['#a33a3a','spear',null],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin'],helper:['#1f9d8f',null,null]};
   for(const n of npcs)if(inV(n.x,n.y)){const lk=NPCLOOK[n.kind];L.push([n.y,()=>person(n.x,n.y,lk[0],{moving:true,walk:n.walk,face:n.face,tool:lk[1],swing:n.swing,carry:Math.min(n.carry,6),carryType:lk[2]||n.ctype,hood:n.kind==='miner'?'#ffcd3c':undefined})])}
   if(crate&&inV(crate.x,crate.y))L.push([crate.y,()=>{const y=crate.y-crate.fall*400;shadow(crate.x,crate.y,22);if(crate.fall>0){ctx.strokeStyle='rgba(80,80,80,.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(crate.x-16,y-30);ctx.lineTo(crate.x-30,y-80);ctx.moveTo(crate.x+16,y-30);ctx.lineTo(crate.x+30,y-80);ctx.stroke();ctx.fillStyle='#e04646';ctx.beginPath();ctx.ellipse(crate.x,y-82,38,18,0,Math.PI,0);ctx.fill()}else{ctx.globalAlpha=.4+Math.sin(t*6)*.3;ell(crate.x,crate.y,38,14,'#ffd34d');ctx.globalAlpha=1}ctx.fillStyle='#a8743f';ctx.fillRect(crate.x-18,y-30,36,30);ctx.strokeStyle='#6b4527';ctx.lineWidth=3;ctx.strokeRect(crate.x-18,y-30,36,30);ctx.beginPath();ctx.moveTo(crate.x-18,y-30);ctx.lineTo(crate.x+18,y);ctx.stroke()}]);
   L.push([P.y,()=>{person(P.x,P.y,'#f08a24',{moving:P.moving,walk:P.walk,face:P.face,tool:'axe',swing:P.swing,stack:P.stack,hurt:P.hurtT>0,toolCol:lv.axe>=4?'#ffd34d':'#c9d3dd'});if(P.hp<P.maxHp)bar(P.x,P.y-70-P.stack.length*7.5,40,P.hp/P.maxHp,'#5fd36a')}]);
@@ -1787,6 +1868,7 @@ const BUILD={
   merchant:(p,o)=>{mk(GB(3,.8,1),'#a8743f',0,.4,0,o);mk(GB(3.15,.12,1.2),'#c48e55',0,.86,0,o);for(const a of[-1.4,1.4])mk(GB(.14,2.2,.14),'#7a4f2a',a,1.1,-.38,o);
     for(let i=0;i<8;i++)mk(GB(.4,.1,1.4),i%2?'#ffffff':'#d1882a',-1.4+i*.4,2.15,0,o,{rx:.32});
     ['log','ore','pelt','meat','fish','crystal'].forEach((k,i)=>{const m=new THREE.Mesh(itemGeo(k),itemMat(k));m.position.set(-1.1+i*.44,1.02,.1);m.castShadow=true;o.add(m)})},
+  helper:(p,o)=>{houseM(o,2.1,1.2,1.6,'#9c7a55','#1f9d8f');mk(GB(.4,.16,.16),'#555555',1.25,.5,.7,o);mk(GB(.08,.5,.08),'#7a4f28',1.25,.25,.7,o)},
   cart:(p,o)=>{mk(GB(3,.3,1.4),'#8a5a2f',0,.15,0,o);for(const a of[-1.3,1.3])mk(GB(.15,1.8,.15),'#8a5a2f',a,1.05,-.4,o);mk(GT(3.4,.7,1.8),'#4a5560',0,1.95,-.2,o);mk(GT(1.9,.35,1.86),'#f6fbff',0,2.3,-.2,o,{nocast:true})},
   fisher:(p,o)=>{houseM(o,2,1.2,1.6,'#7a95ad','#2d5d8c');mk(GB(.06,1.2,.06),'#7a4f28',1.2,.6,.6,o,{rz:-.5})},
   lighthouse:(p,o)=>{mk(GC(.55,.7,3.2,10),'#d7e3ee',0,1.6,0,o);for(const y of[1,2.2])mk(GC(.62,.66,.35,10),'#e04646',0,y,0,o);mk(GC(.75,.75,.2,10),'#8e9aa6',0,3.3,0,o);
@@ -1961,7 +2043,7 @@ function render3D(){
   const zon=(key,x,y,w,h,show,near)=>{const z=zone3D(key,x,y,w,h);z.o.visible=show;if(show){z.baseM.color.set(near?'#ffd34d':'#4696e6');z.prog.visible=false}};
   for(const s of SHOPS)zon('d'+s.id,s.drop.x,s.drop.y,96,56,shopOpen(s),Math.hypot(P.x-s.drop.x,P.y-s.drop.y)<55);
   zon('depo',DEPO.x,DEPO.y,96,52,built('warehouse'),Math.hypot(P.x-DEPO.x,P.y-DEPO.y)<50);
-  WDZ.forEach((z,i)=>zon('w'+i,z.x,z.y,72,52,built('warehouse'),Math.abs(P.x-z.x)<32&&Math.abs(P.y-z.y)<26));
+  WDZ.forEach((z,i)=>zon('w'+i,z.x,z.y,70,52,built('warehouse'),inWDZ(z)));
   zon('vault',VZ.x,VZ.y,96,52,built('vault'),Math.hypot(P.x-VZ.x,P.y-VZ.y)<50);
   zon('sellz',SELLZ.x,SELLZ.y,68,52,built('warehouse'),Math.abs(P.x-SELLZ.x)<34&&Math.abs(P.y-SELLZ.y)<26);
   zon('dlv',DLV.x,DLV.y,68,52,built('warehouse'),Math.abs(P.x-DLV.x)<34&&Math.abs(P.y-DLV.y)<26);
@@ -1984,7 +2066,7 @@ function render3D(){
   // humans
   let hi=0;const human=(o,opt)=>placeHuman(pool('human',hi++,makeHuman),o,opt);
   human(P,{col:'#f08a24',moving:P.moving,tool:'axe',swing:P.swing,stack:P.stack,hurt:P.hurtT>0,gold:lv.axe>=4});
-  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],guard:['#a33a3a','spear',null],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin']};
+  const NPCLOOK={lumber:['#7c5a3a','axe','log'],miner:['#5d6e80','pick','ore'],hunter:['#3d7a46','spear','meat'],trapper:['#6b5a8f','spear','pelt'],fisher:['#2d6f9c','spear','fish'],polarh:['#cfe0ee','spear','crystal'],guard:['#a33a3a','spear',null],porter:['#4f7fbf',null,null],collector:['#c9a227',null,'coin'],helper:['#1f9d8f',null,null]};
   for(const n of npcs){const lk=NPCLOOK[n.kind],arr=[];for(let j=0;j<Math.min(n.carry,8);j++)arr.push(lk[2]||n.ctype);human(n,{col:lk[0],moving:true,tool:lk[1],swing:n.swing,stack:arr,hood:n.kind==='miner'?'#ffcd3c':null})}
   for(const c of customers){human(c,{col:c.col,moving:true,stack:c.carry?[c.carry]:[]})}
   poolEnd('human',hi);
@@ -2034,7 +2116,7 @@ function drawOverlay3D(){
   // pads
   for(const p of PADS){if(!visible(p))continue;const c=w2s(p.x,p.y,0);if(!on(c,80))continue;
     const need=costOf(p),pd=paid[p.id],nm=padName(p);
-    txt(nm,c.x,c.y-17,nm.length>7?11:13,'#fff');costRow(c.x,c.y+9,need,pd,110)}
+    txt(nm,c.x,c.y-17,nm.length>7?11:13,'#fff');costRow(c.x,c.y+9,need,pd,110);if(autoUp[p.id])autoTag(c.x,c.y+28)}
   // zones
   const zl=(x,y,draw)=>{const c=w2s(x,y,0);if(on(c))draw(c)};
   for(const s of SHOPS)if(shopOpen(s))zl(s.drop.x,s.drop.y,c=>{if(s.ing){itemIcon('meat',c.x-36,c.y-7,.75);itemIcon('fish',c.x-16,c.y-7,.75);itemIcon('log',c.x+4,c.y-7,.65);txt('材料',c.x+30,c.y-7,11,'#fff');txt('肉か魚2＋薪1→1皿',c.x,c.y+12,10,'#ffe9b0')}else{const ty=shopTypes(s);ty.forEach((k,i)=>itemIcon(k,c.x-24-(ty.length-1-i)*20,c.y,.95));txt('売る',c.x+14,c.y,13,'#fff')}});
@@ -2048,7 +2130,7 @@ function drawOverlay3D(){
     txt(s.name,c.x,c.y-14,14,'#fff');txt(shopLine(s),c.x,c.y+4,11,'#fff');if(s.ing)txt(`材料　肉 ${s.ing.meat}　魚 ${s.ing.fish}　薪 ${s.ing.log}${npcs.some(n=>n.state==='retk')?'（補給中）':''}`,c.x,c.y+20,11,'#ffe9b0')}
   if(built('warehouse')){const c=w2s(1000,1800,120);if(on(c)){txt('倉庫',c.x,c.y-14,14,'#fff');ctx.font=`900 11px ${FONT}`;let x=c.x-STORE_T.length*44/2;for(const k of STORE_T){itemIcon(k,x+9,c.y+6,.8);txt(String(store[k]),x+21,c.y+6,11,store[k]>=storeCap?'#ff8a8a':'#fff','left');x+=44}}}
   if(built('vault')){const c=w2s(1400,1800,100);if(on(c)){txt('金庫',c.x,c.y-12,14,'#fff');txt(String(vaultN),c.x,c.y+6,13,'#ffd34d')}}
-  for(const id of['guardhouse','polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
+  for(const id of['helper','guardhouse','polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
   if(lv.statue){const c=w2s(1200,1555,120);if(on(c))txt('英雄の像 Lv'+lv.statue,c.x,c.y,11,'#fff')}
   // piles
   for(const p of PILES){if(!pileOn(p)||pileN[p.id]<=0)continue;const c=w2s(p.x,p.y,p.type==='coin'?40:60);if(!on(c))continue;
@@ -2127,6 +2209,27 @@ addEventListener('pointerdown',()=>{if(started&&AU.on)auInit()});
  $('cNo').onclick=()=>{$('cConfirm').hidden=true;msg.textContent='復元をやめました'};
  $('cYes').onclick=()=>{const d=pan._d;if(!d)return;auInit();load(d);save();started=true;ov.hidden=true;pan.hidden=true;$('cIn').value='';toast('引き継ぎコードから復元しました')};
  $('tutc').onclick=()=>{tut=TUT.length;save();$('tut').hidden=true};}
+{const $=id=>document.getElementById(id),pan=$('autop'),list=$('aList');
+ const padList=()=>PADS.filter(p=>!p.fence&&p.req.every(built)&&(!p.need||p.need())&&lv[p.id]<p.max);
+ const label=p=>p.up?`${p.name}　Lv${lv[p.id]}${lv[p.id]>=p.max?'（最大）':''}`:p.name+(built(p.id)?'（完成）':'');
+ const done=p=>lv[p.id]>=p.max;
+ let sig='';
+ function draw(force){
+   $('oSell').className=opt.sell?'on':'';$('oSell').innerHTML=`<span>あふれた素材を自動で売る（半値）</span><span class="tag">${opt.sell?'ON':'OFF'}</span>`;
+   $('oStock').className=opt.stock?'on':'';$('oStock').innerHTML=`<span>倉庫の余りをお店に並べる</span><span class="tag">${opt.stock?'ON':'OFF'}</span>`;
+   $('aNote').textContent=built('helper')?`強化係 ${npcs.filter(n=>n.kind==='helper').length}人。ONにした強化を、倉庫の素材と手持ちのお金で、足りしだい進めてくれます。`:'強化広場のいちばん下「おまかせ」の列で「強化係の小屋」を建てると、ONにした強化を倉庫の素材と手持ちのお金で進めてくれます。';
+   const ps=padList(),ns=ps.map(p=>p.id).join();
+   if(force||ns!==sig){sig=ns;list.innerHTML='';
+     const groups=ROWS.map(([y,nm])=>[nm,p=>p.cat&&p.y===y]).concat([['建物',p=>!p.cat]]);
+     for(const[nm,f]of groups){const g=ps.filter(f);if(!g.length)continue;const h=document.createElement('h4');h.textContent=nm;list.appendChild(h);
+       for(const p of g){const b=document.createElement('button');b.type='button';b.dataset.id=p.id;b.onclick=()=>{if(autoUp[p.id])delete autoUp[p.id];else autoUp[p.id]=1;save();draw()};list.appendChild(b)}}}
+   if(!ps.length)list.innerHTML='<p class="note">いまできる強化はありません</p>';
+   for(const b of list.querySelectorAll('button')){const p=PADBY[b.dataset.id],on=!!autoUp[p.id]&&!done(p);b.className=on?'on':'';b.disabled=done(p);
+     const t=`<span>${label(p)}</span><span class="tag">${done(p)?'—':on?'まかせる':'しない'}</span>`;if(b.innerHTML!==t)b.innerHTML=t}
+ }
+ $('auto').onclick=()=>{draw(true);pan.hidden=false};$('aClose').onclick=()=>{pan.hidden=true};
+ $('oSell').onclick=()=>{opt.sell=!opt.sell;save();draw()};$('oStock').onclick=()=>{opt.stock=!opt.stock;save();draw()};
+ setInterval(()=>{$('auto').hidden=!started||!built('warehouse');if(!pan.hidden)draw()},700);}
 if(hasSave()){ovB.textContent='つづきから';ovR.hidden=false}
 ovB.onclick=()=>{auInit();if(!started&&hasSave())load();started=true;ov.hidden=true};
 ovR.onclick=()=>{auInit();try{localStorage.removeItem(KEY)}catch(e){}reset();started=true;ov.hidden=true};
