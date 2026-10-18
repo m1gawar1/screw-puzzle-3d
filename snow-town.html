@@ -208,7 +208,7 @@ const PADS=[
  {id:'chef',name:'料理人を雇う',x:1110,y:2380,cat:'town',max:3,cost:l=>({coin:Math.round(150*Math.pow(1.7,l))}),req:['kitchen'],up:true},
  // glacier cave (east of the polar nest)
  {id:'cave',name:'氷河の洞窟を開拓',x:CAVEX,y:1080,cost:one({coin:5000,crystal:20,log:150}),req:['bigfurnace'],desc:'洞窟の中は暗い。金と宝石が掘れる',fence:'E'},
- {id:'goldsmith',name:'金細工屋',x:2650,y:780,cost:one({coin:3000,ore:100,log:100}),req:['cave'],desc:'金と宝石が高く売れる'},
+ {id:'goldsmith',name:'金細工師の家',x:1090,y:1270,cost:one({coin:3000,ore:100,log:100}),req:['cave'],desc:'交易所で金と宝石が売れるようになった'},
  {id:'cart',name:'鉱山列車',x:3170,y:780,cost:one({coin:8000,ore:150,log:150,gold:30}),req:['cave'],desc:'トロッコが洞窟の奥から金を運んでくる'},
  {id:'gdoor',name:'巨人の扉',x:CAVEX,y:2215,cost:one({coin:30000,gem:30,gold:100,crystal:50}),req:['cave'],need:()=>BOSSES.slice(0,4).every(b=>beat[b.id]),desc:'奥に雪の巨人がいる…！',fence:'H'},
  {id:'torch',name:'たいまつ',x:750,y:2880,cat:'gold',max:4,cost:l=>({coin:Math.round(2000*Math.pow(1.7,l)),gold:10*(l+1)}),req:['cave'],up:true},
@@ -243,18 +243,19 @@ const NODEV=['feast','donate'];
 const TOTAL_LV=PADS.reduce((s,p)=>s+(NODEV.includes(p.id)?0:p.base+(CAPT[p.id]?CAPT[p.id].caps[p.id]:0)),0)+BOSSES.length;
 
 const SHOPS=[
- {id:'market',name:'市場',type:'meat',x:1000,y:1530,side:-1,req:null,stock:0,cap:60,buyT:0,awn:'#e04646',pile:'pmk',extra:{type:'fish',n:0,cap:60}},
+ {id:'market',name:'市場',type:'meat',x:1000,y:1530,side:-1,req:null,stock:0,cap:60,buyT:0,awn:'#e04646',pile:'pmk',xs:[{type:'fish',n:0,cap:60}]},
  {id:'peltshop',name:'毛皮屋',type:'pelt',x:1400,y:1530,side:1,req:'peltshop',stock:0,cap:30,buyT:0,awn:'#3f78c4',pile:'ppe'},
  {id:'kitchen',name:'料理屋',type:'stew',x:1210,y:1830,side:1,req:'kitchen',stock:0,cap:20,buyT:0,awn:'#2d8c5a',pile:'pkt',q:{x:1300,y:1850,dx:0,dy:-30,sy:-230},ing:{meat:0,fish:0,log:0},cookT:0},
- {id:'trade',name:'交易所',type:'crystal',x:1500,y:2000,side:1,req:'trade',stock:0,cap:40,buyT:0,awn:'#7a4fb0',pile:'ptr',extra:{type:'ore',n:0,cap:300}},
- {id:'goldsmith',name:'金細工屋',type:'gem',x:2650,y:780,side:-1,req:'goldsmith',stock:0,cap:30,buyT:0,awn:'#d4ac1e',pile:'pgs',extra:{type:'gold',n:0,cap:120}},
+ {id:'trade',name:'交易所',type:'crystal',x:1500,y:2000,side:1,req:'trade',stock:0,cap:40,buyT:0,awn:'#7a4fb0',pile:'ptr',xs:[{type:'ore',n:0,cap:300},{type:'gold',n:0,cap:120,req:'goldsmith'},{type:'gem',n:0,cap:30,req:'goldsmith'}]},
 ];
-for(const s of SHOPS){s.drop={x:s.x,y:s.y+90};s.cap0=s.cap;if(s.extra)s.extra.cap0=s.extra.cap}
-SHOPS[3].drop={x:1425,y:1990};
-const shopTypes=s=>s.extra?[s.type,s.extra.type]:[s.type];
-const shopN=(s,k)=>k===s.type?s.stock:s.extra.n;
-const shopCap=(s,k)=>k===s.type?s.cap:s.extra.cap;
-function shopAdd(s,k,n){if(k===s.type)s.stock+=n;else s.extra.n+=n}
+for(const s of SHOPS){s.drop={x:s.x,y:s.y+90};s.cap0=s.cap;for(const x of s.xs||[])x.cap0=x.cap}
+SHOPS[3].drop={x:1405,y:2012};
+// a shop sells its main type plus extra types (xs); an extra with req opens when that building is built
+const shopX=(s,k)=>(s.xs||[]).find(x=>x.type===k);
+const shopTypes=s=>[s.type].concat((s.xs||[]).filter(x=>!x.req||built(x.req)).map(x=>x.type));
+const shopN=(s,k)=>k===s.type?s.stock:shopX(s,k).n;
+const shopCap=(s,k)=>k===s.type?s.cap:shopX(s,k).cap;
+function shopAdd(s,k,n){if(k===s.type)s.stock+=n;else shopX(s,k).n+=n}
 const KITCHEN=SHOPS[2];
 const PILES=[
  {id:'pmk',x:1090,y:1625,type:'coin',req:null},
@@ -263,9 +264,8 @@ const PILES=[
  {id:'pore',x:875,y:1765,type:'ore',req:'minehut'},
  {id:'ppl',x:1540,y:1830,type:'pelt',req:'trapper'},
  {id:'pkt',x:1300,y:1895,type:'coin',req:'kitchen'},
- {id:'ptr',x:1460,y:2045,type:'coin',req:'trade'},
- {id:'pgs',x:2760,y:880,type:'coin',req:'goldsmith'},
- {id:'pgd',x:3080,y:900,type:'gold',req:'cart'},
+ {id:'ptr',x:1500,y:2058,type:'coin',req:'trade'},
+  {id:'pgd',x:3080,y:900,type:'gold',req:'cart'},
  {id:'pgm',x:3170,y:900,type:'gem',req:'cart'},
 ];
 const STORE_T=['log','ore','pelt','meat','fish','crystal','gold','gem'];
@@ -361,7 +361,7 @@ const MISSIONS=[
  {txt:'氷河の洞窟を開拓する',k:'caveb',n:1,r:3000,abs:true},
  {txt:'金を20個集める',k:'gold_got',n:20,r:1500},
  {txt:'氷のコウモリを10匹倒す',k:'bat',n:10,r:1500},
- {txt:'金細工屋を建てる',k:'gsb',n:1,r:2000,abs:true},
+ {txt:'金細工師の家を建てる',k:'gsb',n:1,r:2000,abs:true},
  {txt:'森の主を倒す',k:'beat_b1',n:1,r:3000,abs:true},
  {txt:'氷のゴーレムを3体倒す',k:'golem',n:3,r:2500},
  {txt:'宝石を5個集める',k:'gem_got',n:5,r:3000},
@@ -415,7 +415,7 @@ function recompute(){
   const a=lv.axe;dmg=1+a+2*lv.iceaxe+3*lv.gemaxe;atkInt=.45*Math.pow(.9,a)*Math.pow(.92,lv.iceaxe);
   cap=8+4*lv.bag;speed=215*(1+.08*lv.boots);
   const mh=10+6*lv.coat+15*lv.gemarmor;if(P){P.hp=Math.min(mh,P.hp+(mh-P.maxHp));P.maxHp=mh}
-  storeCap=60+60*lv.whup;for(const s of SHOPS){s.cap=Math.round(s.cap0*(1+.5*lv.whup));if(s.extra)s.extra.cap=Math.round(s.extra.cap0*(1+.5*lv.whup))}
+  storeCap=60+60*lv.whup;for(const s of SHOPS){s.cap=Math.round(s.cap0*(1+.5*lv.whup));for(const x of s.xs||[])x.cap=Math.round(x.cap0*(1+.5*lv.whup))}
  arrowDmg=Math.round(2+1.5*lv.arrow);arrowInt=1.1*Math.pow(.88,lv.arrow);
   for(const g of GATES){g.max=30+35*lv.gateup;if(!raid||!raid.active)g.hp=g.max}
   priceMult=(1+.25*lv.sign+.15*lv.statue+.1*lv.gstatue)*(1+.1*lv.rank);meatPrice=Math.round(5*(built('grill')?2:1)*priceMult);peltPrice=Math.round(20*priceMult);
@@ -435,7 +435,7 @@ function reset(){
   money=0;won=false;trueEnd=false;opt={sell:true,stock:true};autoUp={};playT=0;cart=null;beat={};applyCaps();lv={};paid={};for(const p of PADS){lv[p.id]=0;paid[p.id]=ZP()}
   enemies=[];for(const k in ET)for(let i=0;i<ET[k].n;i++)enemies.push(spawnEnemy(k,false));
   items=[];flyers=[];parts=[];texts=[];npcs=[];pileN={};for(const p of PILES)pileN[p.id]=0;
-  for(const s of SHOPS){s.stock=0;s.buyT=0;if(s.extra)s.extra.n=0}
+  for(const s of SHOPS){s.stock=0;s.buyT=0;for(const x of s.xs||[])x.n=0}
   customers=[];crate=null;crateT=40;store={log:0,ore:0,pelt:0,meat:0,fish:0,crystal:0,gold:0,gem:0};vaultN=0;
   deliv=0;tut=0;tutT=0;stats={};mis=0;misBase=0;raid={active:false,t:null,no:0,stolen:0};raiders=[];arrows=[];dog=null;KITCHEN.ing={meat:0,fish:0,log:0};KITCHEN.cookT=0;for(const h of HOLES)h.cd=0;
   for(const n of nodes){n.alive=true;n.hp=n.max}
@@ -458,7 +458,7 @@ function syncNPCs(){
 const KEY='snow-town-v2';
 function saveData(){
   // things being carried are saved where they were heading, so nothing is lost on reload
-  const pn=Object.assign({},pileN),st=Object.assign({},store),stock=SHOPS.map(s=>s.stock),ex=SHOPS.map(s=>s.extra?s.extra.n:0),ing=Object.assign({},KITCHEN.ing);let vn=vaultN;
+  const pn=Object.assign({},pileN),st=Object.assign({},store),stock=SHOPS.map(s=>s.stock),ex=SHOPS.map(s=>s.xs?s.xs[0].n:0),ex2=SHOPS.map(s=>(s.xs||[]).map(x=>x.n)),ing=Object.assign({},KITCHEN.ing);let vn=vaultN;
   const HP={lumber:'plog',miner:'pore',trapper:'ppl'};
   let hc=0;
   for(const n of npcs){
@@ -473,7 +473,7 @@ function saveData(){
     else if(n.kind==='porter'){if(n.state==='retk')ing[n.ctype==='log'?'log':n.ctype]+=n.carry;else st[n.ctype]+=n.carry}
   }
   const stack=P.stack.concat(dog?dog.carry:[]);
-  return JSON.stringify({money:money+hc,lv,paid,stock,ex,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,tut,beat,opt,autoUp,pt:Math.round(playT),v:2,ts:Date.now()});
+  return JSON.stringify({money:money+hc,lv,paid,stock,ex,ex2,pileN:pn,store:st,vaultN:vn,stats,mis,misBase,raid:{no:raid.no,t:raid.active?20:raid.t},ing,feastT,stack,deliv,tut,beat,opt,autoUp,pt:Math.round(playT),v:2,ts:Date.now()});
 }
 function save(){try{localStorage.setItem(KEY,saveData())}catch(e){}}
 const encodeSave=()=>btoa(unescape(encodeURIComponent(saveData())));
@@ -485,7 +485,9 @@ function load(dd){
     beat=Object.assign({},d.beat||{});applyCaps();opt=Object.assign({sell:true,stock:true},d.opt||{});autoUp=Object.assign({},d.autoUp||{});playT=d.pt||0;trueEnd=!!beat.giant;
     for(const id in d.lv||{})if(id in lv)lv[id]=d.lv[id];
     for(const id in d.paid||{})if(id in paid)paid[id]=Object.assign(ZP(),d.paid[id]);
-    money=d.money||0;(d.stock||[]).forEach((n,i)=>{if(SHOPS[i])SHOPS[i].stock=n});(d.ex||[]).forEach((n,i)=>{if(SHOPS[i]&&SHOPS[i].extra)SHOPS[i].extra.n=n});
+    money=d.money||0;(d.stock||[]).forEach((n,i)=>{if(SHOPS[i])SHOPS[i].stock=n});(d.ex||[]).forEach((n,i)=>{if(SHOPS[i]&&SHOPS[i].xs)SHOPS[i].xs[0].n=n});(d.ex2||[]).forEach((a,i)=>{if(SHOPS[i]&&SHOPS[i].xs)a.forEach((n,j)=>{if(SHOPS[i].xs[j])SHOPS[i].xs[j].n=n})});
+    // the old goldsmith stall at the cave was shop 4: its gems / gold / coins move to the trading post
+    if(d.v===2&&!d.ex2){const tr=SHOPS[3];if(d.stock&&d.stock[4])shopX(tr,'gem').n+=d.stock[4];if(d.ex&&d.ex[4])shopX(tr,'gold').n+=d.ex[4];if(d.pileN&&d.pileN.pgs)pileN.ptr+=d.pileN.pgs}
     Object.assign(pileN,d.pileN||{});Object.assign(store,d.store||{});vaultN=d.vaultN||0;
     stats=d.stats||{};mis=d.mis||0;misBase=d.misBase||0;if(d.raid){raid.no=d.raid.no||0;raid.t=d.raid.t==null?null:d.raid.t<=20?20:Math.max(60,d.raid.t)}Object.assign(KITCHEN.ing,d.ing||{});feastT=d.feastT||0;deliv=d.deliv||0;tut=d.tut!=null?d.tut:(d.lv&&d.lv.furnace?99:0);
     // saves from before the cave update were in the endless missions after the castle: start them on the new cave missions
@@ -726,7 +728,7 @@ function update(dt){
       s.buyT+=dt;
       if(s.buyT>.5){s.buyT=0;const k=Math.min(shopN(s,bt),(bt==='ore'?5:bt==='gold'?3:1)+Math.floor(lv.sign/2));shopAdd(s,bt,-k);f.out=true;f.carry=bt;stat('sold_'+bt,k);const g=priceOf(bt)*k;pileN[s.pile]+=g;if(s.id==='trade')stat('trade_coin',g);addText(s.x+s.side*50,s.y-40,'+'+g,'#ffd34d');sfx('sell',.12)}
     }
-    const qn=s.id==='kitchen'||s.id==='trade'||s.id==='goldsmith'?4:6;
+    const qn=s.id==='kitchen'||s.id==='trade'?4:6;
     while(customers.filter(c=>c.shop===s&&!c.out).length<qn){const hx=s.q?s.q.x+R(-10,10):s.x+s.side*R(70,130),hy=s.q?s.q.y+(s.q.sy||150):s.y+250;puff(hx,hy,6,'#ffffff');customers.push({shop:s,hx,hy,x:hx,y:hy,col:CCOL[Math.floor(Math.random()*CCOL.length)],out:false,walk:Math.random()*6,carry:null})}
   }
   for(const c of customers)if(c.out){if(walkTo(c,c.hx+c.shop.side*30,c.hy,110,dt)<6){c.gone=true;puff(c.x,c.y-10,6,'#ffffff')}}
@@ -829,7 +831,7 @@ function update(dt){
         else if(!porterStock(n))walkVia(n,DEPO.x+60,DEPO.y-10,90,dt);
       }else if(n.state==='getS'){if(walkVia(n,DEPO.x+30,DEPO.y,130,dt)<8){const s0=n.shopT,k=Math.max(0,Math.min(20+5*lv.tools,store[n.ctype]-Math.floor(storeCap*.3),shopCap(s0,n.ctype)-shopN(s0,n.ctype)));store[n.ctype]-=k;n.carry=k;n.state=k?'retS':'seek';if(!k)n.shopT=null}}
       else if(n.state==='retS'){const s0=n.shopT;if(walkVia(n,s0.drop.x,s0.drop.y,130,dt)<8){const k=Math.min(n.carry,shopCap(s0,n.ctype)-shopN(s0,n.ctype));shopAdd(s0,n.ctype,k);n.carry-=k;if(n.carry>0){const a=Math.min(n.carry,storeCap-store[n.ctype]);store[n.ctype]+=a;autoSell(n.ctype,n.carry-a,n.x,n.y)}n.carry=0;n.state='seek';n.shopT=null}}
-      else{const ps=n.ctype==='ore'?SHOPS[3]:SHOPS[1],sell=(n.ctype==='pelt'&&shopOpen(ps)&&ps.stock<ps.cap)||(n.ctype==='ore'&&shopOpen(ps)&&store.ore>=storeCap*.8&&ps.extra.n<ps.extra.cap);
+      else{const ps=n.ctype==='ore'?SHOPS[3]:SHOPS[1],sell=(n.ctype==='pelt'&&shopOpen(ps)&&ps.stock<ps.cap)||(n.ctype==='ore'&&shopOpen(ps)&&store.ore>=storeCap*.8&&shopN(ps,'ore')<shopCap(ps,'ore'));
         if(walkVia(n,sell?ps.x-60:DEPO.x+30,sell?ps.y+45:DEPO.y,130,dt)<8){if(sell){const k=Math.min(n.carry,shopCap(ps,n.ctype)-shopN(ps,n.ctype));shopAdd(ps,n.ctype,k);n.carry-=k}const a=Math.min(n.carry,storeCap-store[n.ctype]);store[n.ctype]+=a;autoSell(n.ctype,n.carry-a,n.x,n.y);n.carry=0;n.state='seek'}}
     }else if(n.kind==='collector'){
       if(n.state==='seek'){
@@ -1259,6 +1261,7 @@ function drawBuilding(p){
     case 'lighthouse':shadow(x,y,30);ctx.fillStyle='#d7e3ee';ctx.fillRect(x-14,y-110,28,110);ctx.fillStyle='#e04646';ctx.fillRect(x-14,y-80,28,14);ctx.fillRect(x-14,y-40,28,14);
       ctx.globalAlpha=.35+Math.sin(t*4)*.2;ell(x,y-122,40,26,'#9fe6ff');ctx.globalAlpha=1;crystalIcon(x,y-124,1.6);txt('氷の灯台',x,y-150,12,'#fff');break;
     case 'hunter':house(x,y,80,48,'#7d6a4f','#3d6b3a','狩人小屋');break;
+    case 'goldsmith':house(x,y,80,48,'#b38a4a','#d4ac1e','金細工師の家');goldIcon(x+28,y-58,.9);gemIcon(x-28,y-58,.9);break;
     case 'helper':house(x,y,84,48,'#9c7a55','#1f9d8f','強化係の小屋');ctx.fillStyle='#555';ctx.fillRect(x+30,y-30,14,6);ctx.fillStyle='#7a4f28';ctx.fillRect(x+35,y-26,4,16);break;
     case 'cart':shadow(x,y,60);ctx.fillStyle='#8a5a2f';ctx.fillRect(x-60,y-14,120,14);for(const a of[-52,46])ctx.fillRect(x+a,y-74,6,60);
       poly([x-70,y-72,x+70,y-72,x+56,y-96,x-56,y-96],'#4a5560');poly([x-60,y-88,x+60,y-88,x+56,y-96,x-56,y-96],'#f6fbff');txt('鉱山列車の駅',x,y-110,12,'#fff');break;
@@ -1353,6 +1356,11 @@ function drawDog(){
   for(let i=0;i<dog.carry.length;i++)itemIcon(dog.carry[i],x,y-34-i*8,.8);
 }
 function shopLine(s){return shopTypes(s).map(k=>`${RES_NAME[k]} ${shopN(s,k)}（${priceOf(k)}）`).join('　')}
+// two goods per line so a shop with four goods stays narrow
+function shopLines(s){const a=shopTypes(s).map(k=>`${RES_NAME[k]} ${shopN(s,k)}（${priceOf(k)}）`),o=[];for(let i=0;i<a.length;i+=2)o.push(a.slice(i,i+2).join('　'));return o}
+// sell spot: up to two icons in a row, four in a 2x2 grid, then 「売る」
+function dropIcons(ty,x,y,sc){if(ty.length<=2){ty.forEach((k,i)=>itemIcon(k,x-22-(ty.length-1-i)*20,y,sc));txt('売る',x+18,y,13,'#fff');return}
+  ty.forEach((k,i)=>itemIcon(k,x-34+(i%2)*20,y-9+Math.floor(i/2)*18,sc*.8));txt('売る',x+20,y,13,'#fff')}
 function drawShop(s){
   const x=s.x,y=s.y;
   shadow(x,y+4,60);
@@ -1361,8 +1369,9 @@ function drawShop(s){
   for(let i=0;i<7;i++)poly([x-60+i*17.2,y-72,x-60+(i+1)*17.2,y-72,x-60+(i+1)*17.2,y-58,x-60+i*17.2,y-58],i%2?'#fff':s.awn);
   for(let i=0;i<7;i++){ctx.fillStyle=i%2?'#fff':s.awn;ctx.beginPath();ctx.arc(x-51.4+i*17.2,y-58,8.6,0,Math.PI);ctx.fill()}
   const arr=[];for(const k of shopTypes(s))for(let i=0;i<Math.min(shopN(s,k),6);i++)arr.push(k);arr.slice(0,12).forEach((k,i)=>itemIcon(k,x-40+(i%6)*15,y-38-Math.floor(i/6)*8,.8));
-  txt(s.name,x,y-88,15,'#fff');
-  txt(shopLine(s),x,y+14,11,'#fff');
+  const sl=shopLines(s);
+  if(sl.length>1){txt(s.name,x,y-88-sl.length*15,15,'#fff');sl.forEach((l,i)=>txt(l,x,y-86-(sl.length-1-i)*15,11,'#fff'))}// more goods: list above the awning
+  else{txt(s.name,x,y-88,15,'#fff');txt(sl[0],x,y+14,11,'#fff')}
   if(s.ing)txt(`材料　肉 ${s.ing.meat}　薪 ${s.ing.log}`,x,y+30,11,'#ffe9b0');
 }
 function zone(x,y,w,h,near){ctx.save();ctx.setLineDash([8,6]);ctx.lineWidth=3;ctx.strokeStyle=near?'#ffd34d':'rgba(255,255,255,.9)';ctx.fillStyle=near?'rgba(255,211,77,.25)':'rgba(70,150,230,.2)';ctx.beginPath();ctx.roundRect(x-w/2,y-h/2,w,h,12);ctx.fill();ctx.stroke();ctx.restore()}
@@ -1371,7 +1380,7 @@ function drawDrop(s){
   const d=s.drop,near=Math.hypot(P.x-d.x,P.y-d.y)<55;
   ctx.save();ctx.setLineDash([8,6]);ctx.lineWidth=3;ctx.strokeStyle=near?'#ffd34d':'rgba(255,255,255,.9)';
   ctx.fillStyle=near?'rgba(255,211,77,.25)':'rgba(70,150,230,.2)';ctx.beginPath();ctx.roundRect(d.x-48,d.y-28,96,56,14);ctx.fill();ctx.stroke();ctx.restore();
-  const ty=shopTypes(s);ty.forEach((k,i)=>itemIcon(k,d.x-22-(ty.length-1-i)*20,d.y,1));txt('売る',d.x+18,d.y,13,'#fff');
+  dropIcons(shopTypes(s),d.x,d.y,1);
 }
 function drawPile(p){
   const n0=pileN[p.id];
@@ -1868,6 +1877,7 @@ const BUILD={
   merchant:(p,o)=>{mk(GB(3,.8,1),'#a8743f',0,.4,0,o);mk(GB(3.15,.12,1.2),'#c48e55',0,.86,0,o);for(const a of[-1.4,1.4])mk(GB(.14,2.2,.14),'#7a4f2a',a,1.1,-.38,o);
     for(let i=0;i<8;i++)mk(GB(.4,.1,1.4),i%2?'#ffffff':'#d1882a',-1.4+i*.4,2.15,0,o,{rx:.32});
     ['log','ore','pelt','meat','fish','crystal'].forEach((k,i)=>{const m=new THREE.Mesh(itemGeo(k),itemMat(k));m.position.set(-1.1+i*.44,1.02,.1);m.castShadow=true;o.add(m)})},
+  goldsmith:(p,o)=>{houseM(o,2,1.2,1.6,'#b38a4a','#d4ac1e');mk(itemGeo('gold'),itemMat('gold'),.7,1.55,.7,o);mk(itemGeo('gem'),itemMat('gem'),-.7,1.6,.7,o)},
   helper:(p,o)=>{houseM(o,2.1,1.2,1.6,'#9c7a55','#1f9d8f');mk(GB(.4,.16,.16),'#555555',1.25,.5,.7,o);mk(GB(.08,.5,.08),'#7a4f28',1.25,.25,.7,o)},
   cart:(p,o)=>{mk(GB(3,.3,1.4),'#8a5a2f',0,.15,0,o);for(const a of[-1.3,1.3])mk(GB(.15,1.8,.15),'#8a5a2f',a,1.05,-.4,o);mk(GT(3.4,.7,1.8),'#4a5560',0,1.95,-.2,o);mk(GT(1.9,.35,1.86),'#f6fbff',0,2.3,-.2,o,{nocast:true})},
   fisher:(p,o)=>{houseM(o,2,1.2,1.6,'#7a95ad','#2d5d8c');mk(GB(.06,1.2,.06),'#7a4f28',1.2,.6,.6,o,{rz:-.5})},
@@ -2119,7 +2129,7 @@ function drawOverlay3D(){
     txt(nm,c.x,c.y-17,nm.length>7?11:13,'#fff');costRow(c.x,c.y+9,need,pd,110);if(autoUp[p.id])autoTag(c.x,c.y+28)}
   // zones
   const zl=(x,y,draw)=>{const c=w2s(x,y,0);if(on(c))draw(c)};
-  for(const s of SHOPS)if(shopOpen(s))zl(s.drop.x,s.drop.y,c=>{if(s.ing){itemIcon('meat',c.x-36,c.y-7,.75);itemIcon('fish',c.x-16,c.y-7,.75);itemIcon('log',c.x+4,c.y-7,.65);txt('材料',c.x+30,c.y-7,11,'#fff');txt('肉か魚2＋薪1→1皿',c.x,c.y+12,10,'#ffe9b0')}else{const ty=shopTypes(s);ty.forEach((k,i)=>itemIcon(k,c.x-24-(ty.length-1-i)*20,c.y,.95));txt('売る',c.x+14,c.y,13,'#fff')}});
+  for(const s of SHOPS)if(shopOpen(s))zl(s.drop.x,s.drop.y,c=>{if(s.ing){itemIcon('meat',c.x-36,c.y-7,.75);itemIcon('fish',c.x-16,c.y-7,.75);itemIcon('log',c.x+4,c.y-7,.65);txt('材料',c.x+30,c.y-7,11,'#fff');txt('肉か魚2＋薪1→1皿',c.x,c.y+12,10,'#ffe9b0')}else dropIcons(shopTypes(s),c.x,c.y,.95)});
   if(built('warehouse')){zl(DEPO.x,DEPO.y,c=>txt('預ける',c.x,c.y,13,'#fff'));for(const z of WDZ)zl(z.x,z.y,c=>{itemIcon(z.type,c.x,c.y-8,.9);txt('取出',c.x,c.y+11,10,'#fff')})}
   if(built('vault'))zl(VZ.x,VZ.y,c=>{coinIcon(c.x-26,c.y,8);txt('受け取る',c.x+8,c.y,12,'#fff')});
   if(built('warehouse'))zl(SELLZ.x,SELLZ.y,c=>{txt('売り払う',c.x,c.y-9,11,'#fff');txt('半値',c.x,c.y+9,10,'#ffd34d')});
@@ -2127,10 +2137,10 @@ function drawOverlay3D(){
   if(built('merchant'))for(const z of BZ)zl(z.x,z.y,c=>{itemIcon(z.type,c.x,c.y-10,.9);ctx.font=`900 10px ${FONT}`;const tw=ctx.measureText(String(BUYP[z.type])).width,x0=c.x-(14+tw)/2;coinIcon(x0+5,c.y+11,5.5);txt(String(BUYP[z.type]),x0+13,c.y+11,10,'#ffd34d','left')});
   // shop / building labels
   for(const s of SHOPS){if(!shopOpen(s))continue;const c=w2s(s.x,s.y,s.ing?150:120);if(!on(c))continue;
-    txt(s.name,c.x,c.y-14,14,'#fff');txt(shopLine(s),c.x,c.y+4,11,'#fff');if(s.ing)txt(`材料　肉 ${s.ing.meat}　魚 ${s.ing.fish}　薪 ${s.ing.log}${npcs.some(n=>n.state==='retk')?'（補給中）':''}`,c.x,c.y+20,11,'#ffe9b0')}
+    txt(s.name,c.x,c.y-14-(shopLines(s).length-1)*7,14,'#fff');shopLines(s).forEach((l,i,a)=>txt(l,c.x,c.y+4+(i-(a.length-1)/2)*14,11,'#fff'));if(s.ing)txt(`材料　肉 ${s.ing.meat}　魚 ${s.ing.fish}　薪 ${s.ing.log}${npcs.some(n=>n.state==='retk')?'（補給中）':''}`,c.x,c.y+20,11,'#ffe9b0')}
   if(built('warehouse')){const c=w2s(1000,1800,120);if(on(c)){txt('倉庫',c.x,c.y-14,14,'#fff');ctx.font=`900 11px ${FONT}`;let x=c.x-STORE_T.length*44/2;for(const k of STORE_T){itemIcon(k,x+9,c.y+6,.8);txt(String(store[k]),x+21,c.y+6,11,store[k]>=storeCap?'#ff8a8a':'#fff','left');x+=44}}}
   if(built('vault')){const c=w2s(1400,1800,100);if(on(c)){txt('金庫',c.x,c.y-12,14,'#fff');txt(String(vaultN),c.x,c.y+6,13,'#ffd34d')}}
-  for(const id of['helper','guardhouse','polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
+  for(const id of['goldsmith','helper','guardhouse','polarhut','merchant','fisher','lighthouse','lumber','hunter','minehut','trapper','smithy','tower','doghouse','hotspring','castle','grill','bigfurnace'])if(built(id)){const p=PADBY[id],c=w2s(p.x,p.y,id==='tower'||id==='castle'?230:id==='bigfurnace'?150:110);if(on(c))txt(p.name,c.x,c.y,12,'#fff')}
   if(lv.statue){const c=w2s(1200,1555,120);if(on(c))txt('英雄の像 Lv'+lv.statue,c.x,c.y,11,'#fff')}
   // piles
   for(const p of PILES){if(!pileOn(p)||pileN[p.id]<=0)continue;const c=w2s(p.x,p.y,p.type==='coin'?40:60);if(!on(c))continue;
